@@ -19,6 +19,7 @@ package org.prabhu.ambari;
 
 import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -85,28 +86,11 @@ public class WebDriverManager {
       }
     }
 
-    if (driver == null) {
-      try {
-        driver = new ChromeDriver();
-      } catch (Exception e) {
-        LOG.error("Exception in WebDriverManager while ChromeDriver ", e);
-      }
-    }
-
-    if (driver == null) {
-      try {
-        driver = new SafariDriver();
-      } catch (Exception e) {
-        LOG.error("Exception in WebDriverManager while SafariDriver ", e);
-      }
-    }
-
-
     if (url.equals("")) {
       url = "http://c6401.ambari.apache.org:8080";
     }
-    driver.get(url);
-    driver.manage().window().maximize();
+    driver.get("https://riders.uber.com/trips");
+    driver.manage().window().setSize(new Dimension(1000, 1000));
     return driver;
   }
 

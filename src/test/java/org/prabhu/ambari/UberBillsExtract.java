@@ -20,10 +20,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.openqa.selenium.By;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,8 +53,7 @@ public class UberBillsExtract extends AbstractIT {
     try {
 
       List<String> monthArray = new ArrayList<String>() {{
-        add("06");
-        add("07");
+        add("12");
       }};
       sleep(waitTime, false);
 
@@ -94,7 +90,6 @@ public class UberBillsExtract extends AbstractIT {
               .getText().split(" ")[2];
 
           csvFile.append(amount).append(",");
-
           takeScreenshot(urlId, date);
           nos++;
         } catch (Exception e) {
