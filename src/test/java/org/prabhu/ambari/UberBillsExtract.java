@@ -53,6 +53,7 @@ public class UberBillsExtract extends AbstractIT {
     try {
 
       List<String> monthArray = new ArrayList<String>() {{
+        add("11");
         add("12");
       }};
       sleep(waitTime, false);

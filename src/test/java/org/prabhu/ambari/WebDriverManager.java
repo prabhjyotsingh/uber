@@ -18,25 +18,17 @@
 package org.prabhu.ambari;
 
 import org.apache.commons.io.FileUtils;
-import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
-import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
-import org.openqa.selenium.safari.SafariDriver;
-import org.openqa.selenium.support.ui.ExpectedCondition;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-
-import static org.junit.Assert.fail;
 
 
 public class WebDriverManager {
@@ -51,6 +43,7 @@ public class WebDriverManager {
     if (driver == null) {
       try {
         FirefoxBinary ffox = new FirefoxBinary();
+        ffox.setTimeout(120000);
         int firefoxVersion = WebDriverManager.getFirefoxVersion();
         LOG.info("Firefox version " + firefoxVersion + " detected");
 
@@ -89,7 +82,7 @@ public class WebDriverManager {
     if (url.equals("")) {
       url = "http://c6401.ambari.apache.org:8080";
     }
-    driver.get("https://riders.uber.com/trips");
+    driver.get(url);
     driver.manage().window().setSize(new Dimension(1000, 1000));
     return driver;
   }
