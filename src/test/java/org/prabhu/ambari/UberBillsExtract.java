@@ -16,26 +16,36 @@
  */
 package org.prabhu.ambari;
 
-import org.apache.commons.io.FileUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.openqa.selenium.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.google.common.base.Function;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import org.apache.commons.io.FileUtils;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.FluentWait;
+import org.openqa.selenium.support.ui.Wait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created for org.prabhu.ambari on 03/08/16.
  */
 public class UberBillsExtract extends AbstractIT {
+
   private static final Logger LOG = LoggerFactory.getLogger(UberBillsExtract.class);
 
   long waitTime = 2000;
+  protected static final long MAX_PARAGRAPH_TIMEOUT_SEC = 60;
 
   @Before
   public void startUp() {
@@ -53,23 +63,23 @@ public class UberBillsExtract extends AbstractIT {
     try {
 
       List<String> monthArray = new ArrayList<String>() {{
-        add("11");
-        add("12");
+        add("09");
       }};
       sleep(waitTime, false);
 
-      driver.findElement(By.xpath(".//*[@id='email']")).sendKeys("userName");
+      driver.findElement(By.xpath(".//*[@name='textInputValue']"))
+          .sendKeys("username");
+      driver.findElement(By.xpath(".//*[@id='app-body']/div/div[1]/form/button")).click();
       driver.findElement(By.xpath(".//*[@id='password']")).sendKeys("password");
-      driver.findElement(By.xpath(".//*[@id='login-form']/button")).click();
+      driver.findElement(By.xpath(".//*[@id='app-body']/div/div[1]/form/button")).click();
 
       sleep(waitTime, false);
 
       List<String> tripIds = new ArrayList<String>();
 
-
-      List<WebElement> tripElements = driver.findElements(By.xpath(".//*[@id='trips-table']/tbody/tr[contains(@class,\"trip-expand__origin\")]"));
+      List<WebElement> tripElements = driver.findElements(
+          By.xpath(".//*[@id='trips-table']/tbody/tr[contains(@class,\"trip-expand__origin\")]"));
       tripIds.addAll(getTripIdForThisPage(tripElements, monthArray));
-
 
       WebDriverManager.downLoadsDir = WebDriverManager.downLoadsDir + "uber/";
 
@@ -81,14 +91,18 @@ public class UberBillsExtract extends AbstractIT {
           driver.get(tripUrl + urlId);
           csvFile.append(nos).append(",").append(urlId).append(",");
 
-          String date = driver.findElement(
-              By.xpath(".//*[@id='slide-menu-content']//div[@class='page-lead']/div")).getText()
+          String date = pollingWait(
+              By.xpath(".//*[@id='slide-menu-content']//div[@class='page-lead']/div"),
+              MAX_PARAGRAPH_TIMEOUT_SEC).getText()
               .split("on")[1];
-          csvFile.append(date).append(",").append("Uber,");
+          csvFile.append("\"").append(date).append("\",").append("Uber,");
 
-          String amount = driver.findElement(
-              By.xpath(".//*[@id='slide-menu-content']//table/tbody/tr[contains(.,'Subtotal')]"))
-              .getText().split(" ")[2];
+          driver.switchTo().frame(driver.findElement(By.id("receipt-frame")));
+          String amount = pollingWait(
+              By.xpath(".//*[@id='app-content']/div/div/div/div/div[contains(.,'Subtotal')]"),
+              MAX_PARAGRAPH_TIMEOUT_SEC)
+              .getText().split("₹")[1];
+          driver.switchTo().defaultContent();
 
           csvFile.append(amount).append(",");
           takeScreenshot(urlId, date);
@@ -106,10 +120,24 @@ public class UberBillsExtract extends AbstractIT {
     }
   }
 
+  protected WebElement pollingWait(final By locator, final long timeWait) {
+    Wait<WebDriver> wait = new FluentWait<WebDriver>(driver)
+        .withTimeout(timeWait, TimeUnit.SECONDS)
+        .pollingEvery(1, TimeUnit.SECONDS)
+        .ignoring(NoSuchElementException.class);
+
+    return wait.until(new Function<WebDriver, WebElement>() {
+      public WebElement apply(WebDriver driver) {
+        return driver.findElement(locator);
+      }
+    });
+  }
+
   private void takeScreenshot(String urlId, String date) {
     File screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
     try {
-      FileUtils.copyFile(screenshot, new File(WebDriverManager.downLoadsDir + date + "--" + urlId + ".png"));
+      FileUtils.copyFile(screenshot,
+          new File(WebDriverManager.downLoadsDir + date + "--" + urlId + ".png"));
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -127,10 +155,12 @@ public class UberBillsExtract extends AbstractIT {
     }
 
     WebElement lastElement = tripElements.get(tripElements.size() - 1);
-    if (monthArray.contains(lastElement.findElement(By.xpath(".//td[2]")).getText().split("/")[0])) {
+    if (monthArray
+        .contains(lastElement.findElement(By.xpath(".//td[2]")).getText().split("/")[0])) {
       driver.findElement(By.xpath(".//*[@id='trips-pagination']/div[2]/a")).click();
       sleep(waitTime, false);
-      tripElements = driver.findElements(By.xpath(".//*[@id='trips-table']/tbody/tr[contains(@class,\"trip-expand__origin\")]"));
+      tripElements = driver.findElements(
+          By.xpath(".//*[@id='trips-table']/tbody/tr[contains(@class,\"trip-expand__origin\")]"));
       tripIds.addAll(getTripIdForThisPage(tripElements, monthArray));
     }
 
