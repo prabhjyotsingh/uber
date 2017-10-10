@@ -51,7 +51,7 @@ public class WebDriverManager {
 
         String tempPath = downLoadsDir + "firebug/";
 
-        downloadFireBug(firefoxVersion, tempPath);
+//        downloadFireBug(firefoxVersion, tempPath);
 
         final String firebugPath = tempPath + "firebug.xpi";
         final String firepathPath = tempPath + "firepath.xpi";

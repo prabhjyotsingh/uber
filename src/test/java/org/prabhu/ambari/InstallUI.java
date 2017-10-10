@@ -17,6 +17,20 @@
 
 package org.prabhu.ambari;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import org.apache.commons.exec.CommandLine;
+import org.apache.commons.exec.DefaultExecutor;
+import org.apache.commons.exec.ExecuteWatchdog;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,133 +39,253 @@ import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-
 public class InstallUI extends AbstractIT {
-    private static final Logger LOG = LoggerFactory.getLogger(InstallUI.class);
 
+  private static final Logger LOG = LoggerFactory.getLogger(InstallUI.class);
 
-    @Before
-    public void startUp() {
-        driver = WebDriverManager.getWebDriver("http://172.22.90.98:8080");
-    }
+  String host = "ctr-e134-1499953498516-210681-01-000003.hwx.site\n"
+      + "ctr-e134-1499953498516-210681-01-000004.hwx.site\n"
+      + "ctr-e134-1499953498516-210681-01-000002.hwx.site";
+  String webHostUrl;
+  String AMBARI_URL = "http://release.eng.hortonworks.com/portal/release/Ambari/releasedVersion/AMBARI-2.6.0.0/2.6.0.0/";
+  String HDP_URL = "http://release.eng.hortonworks.com/portal/release/HDP/releasedVersion/2.6-maint/2.6.3.0/";
 
-    @After
-    public void tearDown() {
+  @Before
+  public void startUp() {
+    webHostUrl = "http://" + host.split("\n")[0] + ":8080";
+    driver = WebDriverManager.getWebDriver(webHostUrl);
+  }
+
+  @After
+  public void tearDown() {
 //    driver.quit();
-    }
+  }
 
-    @Test
-    public void testAngularDisplay() throws Exception {
-        try {
+  @Test
+  public void testAngularDisplay() throws Exception {
+    try {
+      GsonBuilder gsonBuilder = new GsonBuilder();
+      Gson gson = gsonBuilder.create();
+      List<String> hostList = Arrays.asList(host.split("\n"));
+      for (String host : hostList) {
+        String command =
+            "ssh -o StrictHostKeyChecking=no -i /Users/prabhjyotsingh/server/hw-qe-keypair.pem root@"
+                + host
+                + " 'yum install -y vim htop curl wget mlocate;/etc/init.d/iptables stop'";
+        executeCommand(command);
+      }
 
-//      String hdpVersion = "BUILDS/2.5.0.0-872";
-            String host = "prabhu-zep-18-1.novalocal";
-            long waitTime = 10000;
+      URL url = new URL(AMBARI_URL);
+      HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+      conn.setRequestMethod("GET");
+      BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+      String line;
+      while ((line = rd.readLine()) != null) {
+        if (line.contains("var data =")) {
+          String result = line.split("var data = ")[1].split(";$")[0];
+          Map<String, Map> build = gson.fromJson(result, Map.class);
 
-            driver.findElement(By.className("login-user-name")).sendKeys("admin");
-            driver.findElement(By.className("login-user-password")).sendKeys("admin");
-
-            driver.findElement(By.className("login-btn")).click();
-
-            pollingWait(By.className("create-cluster-button"), waitTime).click();
-            pollingWait(By.className("ember-text-field"), waitTime).sendKeys("test");
-            driver.findElement(By.className("btn-success")).click();
-
-            //TODO wait for next screen
-
-
-//      List<WebElement> baseURL = driver.findElements(By.xpath("//input[@type='text']"));
-//      for (Integer i = 0; i < baseURL.size(); i++) {
-//        if (i % 2 == 0) {
-//          sleep(500, false);
-//          String url = baseURL.get(i).getAttribute("value").split("BUILDS")[0];
-//          url += hdpVersion;
-//          baseURL.get(i).clear();
-//          baseURL.get(i).sendKeys(url);
-//
-//        }
-//      }
-            sleep(2000, false);
-            driver.findElement(By.xpath(".//*[@id='select-stack']/button[2]")).click();
-            pollingWait(By.xpath(".//*[@id='host-names']"), waitTime).sendKeys(host);
-            driver.findElement(By.id("sshKey")).sendKeys(InstallationUtils.getPrivateKey());
-            driver.findElement(By.className("btn-success")).click();
-
-            pollingWait(By.xpath("//div//span[contains(.,'Host')]"), waitTime);
-            pollingWait(By.xpath("//div//span[contains(.,'Host')]"), waitTime);
-            pollingWait(By.xpath("//div//a[contains(.,'Installing (0)')]"), (20 * 60 * 1000));
-
-            try {
-                pollingWait(By.xpath("//*[@id='confirm-hosts']/div[2][contains(.,'All host checks passed')]"), (5 *
-                        60 * 1000));
-            } catch (Exception e) {
-                //ignore
+          for (Map.Entry<String, Map> entry : build.entrySet()) {
+            Map<String, Map> buildInfo = entry.getValue();
+            if (((Map) buildInfo.get("platforms").get("centos6")).get("status").equals("pass")) {
+              String repoView = (String) ((Map) buildInfo.get("platforms").get("centos6"))
+                  .get("repo_view");
+              String command =
+                  "ssh -o StrictHostKeyChecking=no -i /Users/prabhjyotsingh/server/hw-qe-keypair.pem root@"
+                      + hostList.get(0)
+                      + " 'echo \"" + repoView + "\" > /etc/yum.repos.d/ambari.repo;"
+                      + "yum install ambari-server -y;"
+                      + "ambari-server setup -s;"
+                      + "ambari-server start'";
+              executeCommand(command);
+              break;
             }
+          }
+          break;
+        }
+      }
+      rd.close();
 
-            pollingWait(By.className("btn-success"), waitTime).click();
+      String hdpVersion = "BUILDS/2.5.0.0-872";
 
+      url = new URL(HDP_URL);
+      conn = (HttpURLConnection) url.openConnection();
+      conn.setRequestMethod("GET");
+      rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+      while ((line = rd.readLine()) != null) {
+        if (line.contains("var data =")) {
+          String result = line.split("var data = ")[1].split(";$")[0];
+          Map<String, Map> build = gson.fromJson(result, Map.class);
 
-            sleep(2000, false);
-            pollingWait(By.xpath("//th/input"), waitTime).click();
-            sleep(1000, false);
-            pollingWait(By.xpath("//th/input"), waitTime).click();
-            sleep(1000, false);
-            pollingWait(By.className("ZEPPELIN"), waitTime).click();
-            sleep(1000, false);
-            pollingWait(By.className("btn-success"), waitTime).click();
-
-            sleep(500, false);
-            pollingWait(By.xpath(".//*[@id='modal']/div[3]/button[2]"), waitTime).click();
-            sleep(500, false);
-            pollingWait(By.xpath(".//*[@id='modal']/div[3]/button[2]"), waitTime).click();
-            sleep(500, false);
-            pollingWait(By.xpath(".//*[@id='modal']/div[3]/button[2]"), waitTime).click();
-            sleep(500, false);
-            pollingWait(By.xpath(".//*[@id='modal']/div[3]/button[2]"), waitTime).click();
-            sleep(500, false);
-            pollingWait(By.xpath(".//*[@id='modal']/div[3]/button[2]"), waitTime).click();
-            sleep(500, false);
-            pollingWait(By.xpath(".//*[@id='modal']/div[3]/button[2]"), waitTime).click();
-            sleep(500, false);
-            pollingWait(By.xpath(".//*[@id='modal']/div[3]/button[2]"), waitTime).click();
-            sleep(500, false);
-            pollingWait(By.xpath(".//*[@id='modal']/div[3]/button[2]"), waitTime).click();
-            sleep(500, false);
-            pollingWait(By.xpath(".//*[@id='modal']/div[3]/button[2]"), waitTime).click();
-            try {
-                pollingWait(By.xpath(".//*[@id='modal']/div[3]/button[2]"), waitTime).click();
-            } catch (Exception e) {
-
+          for (Map.Entry<String, Map> entry : build.entrySet()) {
+            Map<String, Map> buildInfo = entry.getValue();
+            if (((Map) buildInfo.get("platforms").get("centos6")).get("status").equals("pass")) {
+              hdpVersion = "BUILDS/" + entry.getKey();
+              break;
             }
+          }
+          break;
+        }
+      }
+      rd.close();
 
+      long waitTimeInSeconds = 10;
+      long waitTimeInMs = waitTimeInSeconds * 1000;
 
-            sleep(2000, false);
-            pollingWait(By.className("btn-success"), waitTime).click();
-            sleep(2000, false);
+      driver.findElement(By.className("login-user-name")).sendKeys("admin");
+      driver.findElement(By.className("login-user-password")).sendKeys("admin");
+
+      driver.findElement(By.className("login-btn")).click();
+
+      pollingWait(By.className("create-cluster-button"), waitTimeInSeconds).click();
+      pollingWait(By.className("ember-text-field"), waitTimeInSeconds).sendKeys("test");
+      driver.findElement(By.className("btn-success")).click();
+
+      //TODO wait for next screen
+
+      List<String> removeOSArray = new ArrayList<String>();
+      removeOSArray.add("debian7");
+      removeOSArray.add("redhat-ppc7");
+      removeOSArray.add("redhat7");
+      removeOSArray.add("suse12");
+      removeOSArray.add("suse11");
+      removeOSArray.add("ubuntu12");
+      removeOSArray.add("ubuntu14");
+      removeOSArray.add("ubuntu16");
+
+      for (String remove : removeOSArray) {
+        pollingWait(By.xpath(
+            "//*[@id='repoVersionInfoForm']/div/div[2]/div/div[contains(.,'" + remove
+                + "')]/div[3]"), waitTimeInSeconds).click();
+      }
+
+      List<WebElement> baseURL = driver.findElements(By.xpath("//input[@type='text']"));
+      for (Integer i = 0; i < baseURL.size(); i++) {
+        if (i % 2 == 0) {
+          sleep(500, false);
+          String urls = baseURL.get(i).getAttribute("value").split("BUILDS")[0];
+          urls += hdpVersion;
+          baseURL.get(i).clear();
+          baseURL.get(i).sendKeys(urls);
+
+        }
+      }
+      sleep(2000, false);
+      driver.findElement(By.xpath(".//*[@id='select-stack']/button[2]")).click();
+      pollingWait(By.xpath(".//*[@id='host-names']"), waitTimeInSeconds).sendKeys(host);
+      driver.findElement(By.id("sshKey")).sendKeys(InstallationUtils.getPrivateKey());
+      driver.findElement(By.className("btn-success")).click();
+
+      pollingWait(By.xpath("//div//span[contains(.,'Host')]"), waitTimeInSeconds);
+      pollingWait(By.xpath("//div//span[contains(.,'Host')]"), waitTimeInSeconds);
+      pollingWait(By.xpath("//div//a[contains(.,'Installing (0)')]"), (20 * 60 * 1000));
+
+      try {
+        while (driver.findElement(By.xpath("//*[@id='confirm-hosts']/div[3]/button[2]"))
+            .getAttribute("disabled") != null) {
+          sleep(waitTimeInMs, false);
+        }
+        String hostConfirmation = pollingWait(By.xpath("//*[@id='confirm-hosts']/div[2]"),
+            waitTimeInSeconds)
+            .getText();
+        if (hostConfirmation.contains("success")) {
+          pollingWait(By.className("btn-success"), waitTimeInSeconds).click();
+        } else {
+          pollingWait(By.className("btn-success"), waitTimeInSeconds).click();
+          sleep(500, false);
+          pollingWait(By.xpath(".//*[@id='modal']/div[3]/button[2]"), waitTimeInSeconds).click();
+          sleep(500, false);
+        }
+      } catch (Exception e) {
+        //ignore
+      }
+
+      sleep(2000, false);
+      pollingWait(By.xpath("//th/input"), waitTimeInSeconds).click();
+      sleep(1000, false);
+      pollingWait(By.xpath("//th/input"), waitTimeInSeconds).click();
+      sleep(1000, false);
+
+      pollingWait(By.className("SPARK2"), waitTimeInSeconds).click();
+      pollingWait(By.className("ZEPPELIN"), waitTimeInSeconds).click();
+      sleep(1000, false);
+      pollingWait(By.className("btn-success"), waitTimeInSeconds).click();
+
+      sleep(1000, false);
+      pollingWait(By.xpath(".//*[@id='modal']/div[3]/button[2]"), waitTimeInSeconds).click();
+      sleep(1000, false);
+      pollingWait(By.xpath(".//*[@id='modal']/div[3]/button[2]"), waitTimeInSeconds).click();
+      sleep(1000, false);
+      pollingWait(By.xpath(".//*[@id='modal']/div[3]/button[2]"), waitTimeInSeconds).click();
+      sleep(1000, false);
+      pollingWait(By.xpath(".//*[@id='modal']/div[3]/button[2]"), waitTimeInSeconds).click();
+      sleep(1000, false);
+      pollingWait(By.xpath(".//*[@id='modal']/div[3]/button[2]"), waitTimeInSeconds).click();
+      sleep(1000, false);
+      pollingWait(By.xpath(".//*[@id='modal']/div[3]/button[2]"), waitTimeInSeconds).click();
+      sleep(1000, false);
+      pollingWait(By.xpath(".//*[@id='modal']/div[3]/button[2]"), waitTimeInSeconds).click();
+      sleep(1000, false);
+      pollingWait(By.xpath(".//*[@id='modal']/div[3]/button[2]"), waitTimeInSeconds).click();
+
+      try {
+        pollingWait(By.xpath(".//*[@id='modal']/div[3]/button[2]"), waitTimeInSeconds).click();
+      } catch (Exception e) {
+
+      }
+
+      sleep(2000, false);
+      pollingWait(By.className("btn-success"), waitTimeInSeconds).click();
+      sleep(2000, false);
 //      pollingWait(By.xpath(".//*[@id='component_assign_table']//label[contains(.,'Livy')]"),
 //          waitTime).click();
-            sleep(500, false);
-            pollingWait(By.className("btn-success"), waitTime).click();
-            sleep(2000, false);
-            pollingWait(By.className("btn-success"), waitTime).click();
+      sleep(500, false);
+      pollingWait(By.className("btn-success"), waitTimeInSeconds).click();
+      sleep(2000, false);
+      pollingWait(By.className("btn-success"), waitTimeInSeconds).click();
 
-            pollingWait(By.xpath("//div//li/a[contains(.,'Hive')]"), waitTime).click();
-            pollingWait(By.xpath("//div//li/a[contains(.,'Advanced')]"), waitTime).click();
-            driver.findElement(By.xpath("//div/input[@type='password'][1]")).sendKeys("asdf1234");
-            driver.findElement(By.xpath("//div/input[@type='password'][2]")).sendKeys("asdf1234");
-            sleep(500, false);
-            pollingWait(By.className("btn-success"), waitTime).click();
-            sleep(500, false);
-            pollingWait(By.className("btn-success"), waitTime).click();
-            sleep(5000, false);
-            pollingWait(By.className("btn-success"), waitTime).click();
+      pollingWait(By.xpath("//div//li/a[contains(.,'Hive')]"), waitTimeInSeconds).click();
+      pollingWait(By.xpath("//div//li/a[contains(.,'Advanced')]"), waitTimeInSeconds).click();
+      driver.findElement(By.xpath("//div/input[@type='password'][1]")).sendKeys("asdf1234");
+      driver.findElement(By.xpath("//div/input[@type='password'][2]")).sendKeys("asdf1234");
+      sleep(500, false);
 
+      pollingWait(By.xpath("//div//li/a[contains(.,'Ambari Metrics')]"), waitTimeInSeconds).click();
+      driver.findElement(By.xpath("//div/input[@type='password'][1]")).sendKeys("asdf1234");
+      driver.findElement(By.xpath("//div/input[@type='password'][2]")).sendKeys("asdf1234");
+      sleep(500, false);
 
-            LOG.info("testCreateNotebook Test executed");
-        } catch (Exception e) {
-            handleException("Exception in InstallUI while testAngularDisplay ", e);
-        }
+      pollingWait(By.xpath("//div//li/a[contains(.,'SmartSense')]"), waitTimeInSeconds).click();
+      pollingWait(By.xpath("//div//li/a[contains(.,'Activity Analysis')]"), waitTimeInSeconds)
+          .click();
+      driver.findElement(By.xpath("//div/input[@type='password'][1]")).sendKeys("asdf1234");
+      driver.findElement(By.xpath("//div/input[@type='password'][2]")).sendKeys("asdf1234");
+
+      pollingWait(By.className("btn-success"), waitTimeInSeconds).click();
+      sleep(500, false);
+      pollingWait(By.className("btn-success"), waitTimeInSeconds).click();
+      sleep(5000, false);
+      pollingWait(By.className("btn-success"), waitTimeInSeconds).click();
+
+      LOG.info("testCreateNotebook Test executed");
+
+    } catch (Exception e) {
+      handleException("Exception in InstallUI while testAngularDisplay ", e);
     }
+
+  }
+
+  private void executeCommand(String command) {
+    CommandLine cmdLine = CommandLine.parse("bash -c");
+    cmdLine.addArgument(command, false);
+    DefaultExecutor executor = new DefaultExecutor();
+    executor.setWatchdog(new ExecuteWatchdog(400000L));
+
+    try {
+      int exitVal = executor.execute(cmdLine);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
 
 }
