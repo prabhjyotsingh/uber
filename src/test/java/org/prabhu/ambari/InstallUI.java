@@ -17,6 +17,8 @@
 
 package org.prabhu.ambari;
 
+import static org.prabhu.ambari.InstallationUtils.executeCommand;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.io.BufferedReader;
@@ -43,12 +45,8 @@ public class InstallUI extends AbstractIT {
 
   private static final Logger LOG = LoggerFactory.getLogger(InstallUI.class);
 
-  String host = "ctr-e134-1499953498516-221602-01-000006.hwx.site\n"
-      + "ctr-e134-1499953498516-221602-01-000007.hwx.site\n"
-      + "ctr-e134-1499953498516-221602-01-000004.hwx.site\n"
-      + "ctr-e134-1499953498516-221602-01-000005.hwx.site\n"
-      + "ctr-e134-1499953498516-221602-01-000002.hwx.site\n"
-      + "ctr-e134-1499953498516-221602-01-000003.hwx.site";
+  String host = "ctr-e134-1499953498516-221690-01-000002.hwx.site\n"
+      + "ctr-e134-1499953498516-221690-01-000003.hwx.site";
   String SSH_KEY = "/Users/prabhjyotsingh/server/hw-qe-keypair.pem";
   String webHostUrl;
   String AMBARI_URL = "http://release.eng.hortonworks.com/portal/release/Ambari/releasedVersion/AMBARI-2.6.0.0/2.6.0.0/";
@@ -201,9 +199,9 @@ public class InstallUI extends AbstractIT {
         //ignore
       }
 
-      sleep(2000, false);
+      sleep(5000, false);
       pollingWait(By.xpath("//th/input"), waitTimeInSeconds).click();
-      sleep(2000, false);
+      sleep(5000, false);
       pollingWait(By.xpath("//th/input"), waitTimeInSeconds).click();
       sleep(2000, false);
 
@@ -236,26 +234,26 @@ public class InstallUI extends AbstractIT {
 
       }
 
-      sleep(2000, false);
+      sleep(5000, false);
       pollingWait(By.className("btn-success"), waitTimeInSeconds).click();
       sleep(2000, false);
 //      pollingWait(By.xpath(".//*[@id='component_assign_table']//label[contains(.,'Livy')]"),
 //          waitTime).click();
-      sleep(500, false);
+      sleep(5000, false);
       pollingWait(By.className("btn-success"), waitTimeInSeconds).click();
-      sleep(2000, false);
+      sleep(5000, false);
       pollingWait(By.className("btn-success"), waitTimeInSeconds).click();
 
       pollingWait(By.xpath("//div//li/a[contains(.,'Hive')]"), waitTimeInSeconds).click();
       pollingWait(By.xpath("//div//li/a[contains(.,'Advanced')]"), waitTimeInSeconds).click();
       driver.findElement(By.xpath("//div/input[@type='password'][1]")).sendKeys("asdf1234");
       driver.findElement(By.xpath("//div/input[@type='password'][2]")).sendKeys("asdf1234");
-      sleep(500, false);
+      sleep(1000, false);
 
       pollingWait(By.xpath("//div//li/a[contains(.,'Ambari Metrics')]"), waitTimeInSeconds).click();
       driver.findElement(By.xpath("//div/input[@type='password'][1]")).sendKeys("asdf1234");
       driver.findElement(By.xpath("//div/input[@type='password'][2]")).sendKeys("asdf1234");
-      sleep(500, false);
+      sleep(1000, false);
 
       pollingWait(By.xpath("//div//li/a[contains(.,'SmartSense')]"), waitTimeInSeconds).click();
       pollingWait(By.xpath("//div//li/a[contains(.,'Activity Analysis')]"), waitTimeInSeconds)
@@ -263,8 +261,9 @@ public class InstallUI extends AbstractIT {
       driver.findElement(By.xpath("//div/input[@type='password'][1]")).sendKeys("asdf1234");
       driver.findElement(By.xpath("//div/input[@type='password'][2]")).sendKeys("asdf1234");
 
+      sleep(5000, false);
       pollingWait(By.className("btn-success"), waitTimeInSeconds).click();
-      sleep(500, false);
+      sleep(5000, false);
       pollingWait(By.className("btn-success"), waitTimeInSeconds).click();
       sleep(5000, false);
       pollingWait(By.className("btn-success"), waitTimeInSeconds).click();
@@ -275,19 +274,6 @@ public class InstallUI extends AbstractIT {
       handleException("Exception in InstallUI while testAngularDisplay ", e);
     }
 
-  }
-
-  private void executeCommand(String command) {
-    CommandLine cmdLine = CommandLine.parse("bash -c");
-    cmdLine.addArgument(command, false);
-    DefaultExecutor executor = new DefaultExecutor();
-    executor.setWatchdog(new ExecuteWatchdog(400000L));
-
-    try {
-      int exitVal = executor.execute(cmdLine);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
   }
 
 }
