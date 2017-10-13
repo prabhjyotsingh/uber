@@ -43,9 +43,13 @@ public class InstallUI extends AbstractIT {
 
   private static final Logger LOG = LoggerFactory.getLogger(InstallUI.class);
 
-  String host = "ctr-e134-1499953498516-210681-01-000003.hwx.site\n"
-      + "ctr-e134-1499953498516-210681-01-000004.hwx.site\n"
-      + "ctr-e134-1499953498516-210681-01-000002.hwx.site";
+  String host = "ctr-e134-1499953498516-221602-01-000006.hwx.site\n"
+      + "ctr-e134-1499953498516-221602-01-000007.hwx.site\n"
+      + "ctr-e134-1499953498516-221602-01-000004.hwx.site\n"
+      + "ctr-e134-1499953498516-221602-01-000005.hwx.site\n"
+      + "ctr-e134-1499953498516-221602-01-000002.hwx.site\n"
+      + "ctr-e134-1499953498516-221602-01-000003.hwx.site";
+  String SSH_KEY = "/Users/prabhjyotsingh/server/hw-qe-keypair.pem";
   String webHostUrl;
   String AMBARI_URL = "http://release.eng.hortonworks.com/portal/release/Ambari/releasedVersion/AMBARI-2.6.0.0/2.6.0.0/";
   String HDP_URL = "http://release.eng.hortonworks.com/portal/release/HDP/releasedVersion/2.6-maint/2.6.3.0/";
@@ -53,7 +57,6 @@ public class InstallUI extends AbstractIT {
   @Before
   public void startUp() {
     webHostUrl = "http://" + host.split("\n")[0] + ":8080";
-    driver = WebDriverManager.getWebDriver(webHostUrl);
   }
 
   @After
@@ -66,10 +69,12 @@ public class InstallUI extends AbstractIT {
     try {
       GsonBuilder gsonBuilder = new GsonBuilder();
       Gson gson = gsonBuilder.create();
+      long waitTimeInSeconds = 10;
+
       List<String> hostList = Arrays.asList(host.split("\n"));
       for (String host : hostList) {
         String command =
-            "ssh -o StrictHostKeyChecking=no -i /Users/prabhjyotsingh/server/hw-qe-keypair.pem root@"
+            "ssh -o StrictHostKeyChecking=no -i " + SSH_KEY + " root@"
                 + host
                 + " 'yum install -y vim htop curl wget mlocate;/etc/init.d/iptables stop'";
         executeCommand(command);
@@ -91,9 +96,9 @@ public class InstallUI extends AbstractIT {
               String repoView = (String) ((Map) buildInfo.get("platforms").get("centos6"))
                   .get("repo_view");
               String command =
-                  "ssh -o StrictHostKeyChecking=no -i /Users/prabhjyotsingh/server/hw-qe-keypair.pem root@"
-                      + hostList.get(0)
-                      + " 'echo \"" + repoView + "\" > /etc/yum.repos.d/ambari.repo;"
+                  "ssh -o StrictHostKeyChecking=no -i " + SSH_KEY
+                      + " root@" + hostList.get(0) + " 'echo \"" + repoView
+                      + "\" > /etc/yum.repos.d/ambari.repo;"
                       + "yum install ambari-server -y;"
                       + "ambari-server setup -s;"
                       + "ambari-server start'";
@@ -129,8 +134,7 @@ public class InstallUI extends AbstractIT {
       }
       rd.close();
 
-      long waitTimeInSeconds = 10;
-      long waitTimeInMs = waitTimeInSeconds * 1000;
+      driver = WebDriverManager.getWebDriver(webHostUrl);
 
       driver.findElement(By.className("login-user-name")).sendKeys("admin");
       driver.findElement(By.className("login-user-password")).sendKeys("admin");
@@ -140,8 +144,6 @@ public class InstallUI extends AbstractIT {
       pollingWait(By.className("create-cluster-button"), waitTimeInSeconds).click();
       pollingWait(By.className("ember-text-field"), waitTimeInSeconds).sendKeys("test");
       driver.findElement(By.className("btn-success")).click();
-
-      //TODO wait for next screen
 
       List<String> removeOSArray = new ArrayList<String>();
       removeOSArray.add("debian7");
@@ -173,7 +175,7 @@ public class InstallUI extends AbstractIT {
       sleep(2000, false);
       driver.findElement(By.xpath(".//*[@id='select-stack']/button[2]")).click();
       pollingWait(By.xpath(".//*[@id='host-names']"), waitTimeInSeconds).sendKeys(host);
-      driver.findElement(By.id("sshKey")).sendKeys(InstallationUtils.getPrivateKey());
+      driver.findElement(By.id("sshKey")).sendKeys(InstallationUtils.getPrivateKey(SSH_KEY));
       driver.findElement(By.className("btn-success")).click();
 
       pollingWait(By.xpath("//div//span[contains(.,'Host')]"), waitTimeInSeconds);
@@ -183,7 +185,7 @@ public class InstallUI extends AbstractIT {
       try {
         while (driver.findElement(By.xpath("//*[@id='confirm-hosts']/div[3]/button[2]"))
             .getAttribute("disabled") != null) {
-          sleep(waitTimeInMs, false);
+          sleep(1000, false);
         }
         String hostConfirmation = pollingWait(By.xpath("//*[@id='confirm-hosts']/div[2]"),
             waitTimeInSeconds)
@@ -194,7 +196,6 @@ public class InstallUI extends AbstractIT {
           pollingWait(By.className("btn-success"), waitTimeInSeconds).click();
           sleep(500, false);
           pollingWait(By.xpath(".//*[@id='modal']/div[3]/button[2]"), waitTimeInSeconds).click();
-          sleep(500, false);
         }
       } catch (Exception e) {
         //ignore
@@ -202,11 +203,12 @@ public class InstallUI extends AbstractIT {
 
       sleep(2000, false);
       pollingWait(By.xpath("//th/input"), waitTimeInSeconds).click();
-      sleep(1000, false);
+      sleep(2000, false);
       pollingWait(By.xpath("//th/input"), waitTimeInSeconds).click();
-      sleep(1000, false);
+      sleep(2000, false);
 
       pollingWait(By.className("SPARK2"), waitTimeInSeconds).click();
+      sleep(1000, false);
       pollingWait(By.className("ZEPPELIN"), waitTimeInSeconds).click();
       sleep(1000, false);
       pollingWait(By.className("btn-success"), waitTimeInSeconds).click();
