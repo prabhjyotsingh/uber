@@ -60,7 +60,7 @@ public class InstallationUtils {
     CommandLine cmdLine = CommandLine.parse("bash -c");
     cmdLine.addArgument(command, false);
     DefaultExecutor executor = new DefaultExecutor();
-    executor.setWatchdog(new ExecuteWatchdog(400000L));
+    executor.setWatchdog(new ExecuteWatchdog(-1));
 
     try {
       int exitVal = executor.execute(cmdLine);
