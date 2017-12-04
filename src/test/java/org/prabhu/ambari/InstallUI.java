@@ -45,12 +45,12 @@ public class InstallUI extends AbstractIT {
 
   private static final Logger LOG = LoggerFactory.getLogger(InstallUI.class);
 
-  String host = "ctr-e134-1499953498516-221690-01-000002.hwx.site\n"
-      + "ctr-e134-1499953498516-221690-01-000003.hwx.site";
-  String SSH_KEY = "/Users/prabhjyotsingh/server/hw-qe-keypair.pem";
+  String host = "ctr-e135-1512069032975-5344-01-000003.hwx.site\n" +
+    "ctr-e135-1512069032975-5344-01-000002.hwx.site";
+  String SSH_KEY = "/Users/prabhjyot.singh/server/hw-qe-keypair.pem";
   String webHostUrl;
   String AMBARI_URL = "http://release.eng.hortonworks.com/portal/release/Ambari/releasedVersion/AMBARI-2.6.0.0/2.6.0.0/";
-  String HDP_URL = "http://release.eng.hortonworks.com/portal/release/HDP/releasedVersion/2.6-maint/2.6.3.0/";
+  String HDP_URL = "http://release.eng.hortonworks.com/portal/release/HDP/releasedVersion/2.6-maint/2.6.4.0/";
 
   @Before
   public void startUp() {
