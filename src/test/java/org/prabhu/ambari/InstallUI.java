@@ -45,8 +45,8 @@ public class InstallUI extends AbstractIT {
 
   private static final Logger LOG = LoggerFactory.getLogger(InstallUI.class);
 
-  String host = "ctr-e135-1512069032975-5344-01-000003.hwx.site\n" +
-    "ctr-e135-1512069032975-5344-01-000002.hwx.site";
+  String host = "ctr-e135-1512069032975-5447-01-000002.hwx.site\n" +
+    "ctr-e135-1512069032975-5447-01-000003.hwx.site";
   String SSH_KEY = "/Users/prabhjyot.singh/server/hw-qe-keypair.pem";
   String webHostUrl;
   String AMBARI_URL = "http://release.eng.hortonworks.com/portal/release/Ambari/releasedVersion/AMBARI-2.6.0.0/2.6.0.0/";
@@ -163,7 +163,8 @@ public class InstallUI extends AbstractIT {
       for (Integer i = 0; i < baseURL.size(); i++) {
         if (i % 2 == 0) {
           sleep(500, false);
-          String urls = baseURL.get(i).getAttribute("value").split("BUILDS")[0];
+//          String urls = baseURL.get(i).getAttribute("value").split("BUILDS")[0];
+          String urls = "http://s3.amazonaws.com/dev.hortonworks.com/HDP/centos6/2.x/";
           urls += hdpVersion;
           baseURL.get(i).clear();
           baseURL.get(i).sendKeys(urls);
@@ -246,20 +247,20 @@ public class InstallUI extends AbstractIT {
 
       pollingWait(By.xpath("//div//li/a[contains(.,'Hive')]"), waitTimeInSeconds).click();
       pollingWait(By.xpath("//div//li/a[contains(.,'Advanced')]"), waitTimeInSeconds).click();
-      driver.findElement(By.xpath("//div/input[@type='password'][1]")).sendKeys("asdf1234");
-      driver.findElement(By.xpath("//div/input[@type='password'][2]")).sendKeys("asdf1234");
+      driver.findElement(By.xpath("//div/input[@type='password'][1]")).sendKeys("admin");
+      driver.findElement(By.xpath("//div/input[@type='password'][2]")).sendKeys("admin");
       sleep(1000, false);
 
       pollingWait(By.xpath("//div//li/a[contains(.,'Ambari Metrics')]"), waitTimeInSeconds).click();
-      driver.findElement(By.xpath("//div/input[@type='password'][1]")).sendKeys("asdf1234");
-      driver.findElement(By.xpath("//div/input[@type='password'][2]")).sendKeys("asdf1234");
+      driver.findElement(By.xpath("//div/input[@type='password'][1]")).sendKeys("admin");
+      driver.findElement(By.xpath("//div/input[@type='password'][2]")).sendKeys("admin");
       sleep(1000, false);
 
       pollingWait(By.xpath("//div//li/a[contains(.,'SmartSense')]"), waitTimeInSeconds).click();
       pollingWait(By.xpath("//div//li/a[contains(.,'Activity Analysis')]"), waitTimeInSeconds)
           .click();
-      driver.findElement(By.xpath("//div/input[@type='password'][1]")).sendKeys("asdf1234");
-      driver.findElement(By.xpath("//div/input[@type='password'][2]")).sendKeys("asdf1234");
+      driver.findElement(By.xpath("//div/input[@type='password'][1]")).sendKeys("admin");
+      driver.findElement(By.xpath("//div/input[@type='password'][2]")).sendKeys("admin");
 
       sleep(5000, false);
       pollingWait(By.className("btn-success"), waitTimeInSeconds).click();
