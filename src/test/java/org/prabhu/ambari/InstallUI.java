@@ -17,22 +17,8 @@
 
 package org.prabhu.ambari;
 
-import static org.prabhu.ambari.InstallationUtils.executeCommand;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import org.apache.commons.exec.CommandLine;
-import org.apache.commons.exec.DefaultExecutor;
-import org.apache.commons.exec.ExecuteWatchdog;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,15 +27,32 @@ import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import static org.prabhu.ambari.InstallationUtils.executeCommand;
+
 public class InstallUI extends AbstractIT {
 
   private static final Logger LOG = LoggerFactory.getLogger(InstallUI.class);
+  /*
+172.27.31.145	ctr-e136-1513029738776-25676-01-000005.hwx.site	ctr-e136-1513029738776-25676-01-000005
+172.27.28.15	ctr-e136-1513029738776-25676-01-000003.hwx.site	ctr-e136-1513029738776-25676-01-000003
+172.27.31.143	ctr-e136-1513029738776-25676-01-000002.hwx.site	ctr-e136-1513029738776-25676-01-000002
 
-  String host = "ctr-e135-1512069032975-5447-01-000002.hwx.site\n" +
-    "ctr-e135-1512069032975-5447-01-000003.hwx.site";
+   */
+  String host = "ctr-e136-1513029738776-25676-01-000002.hwx.site\n"
+      + "ctr-e136-1513029738776-25676-01-000003.hwx.site\n"
+      + "ctr-e136-1513029738776-25676-01-000005.hwx.site";
   String SSH_KEY = "/Users/prabhjyot.singh/server/hw-qe-keypair.pem";
   String webHostUrl;
-  String AMBARI_URL = "http://release.eng.hortonworks.com/portal/release/Ambari/releasedVersion/AMBARI-2.6.0.0/2.6.0.0/";
+  String AMBARI_URL = "http://release.eng.hortonworks.com/portal/release/Ambari/releasedVersion/AMBARI-2.6.1.0/2.6.1.0/";
   String HDP_URL = "http://release.eng.hortonworks.com/portal/release/HDP/releasedVersion/2.6-maint/2.6.4.0/";
 
   @Before
@@ -67,14 +70,12 @@ public class InstallUI extends AbstractIT {
     try {
       GsonBuilder gsonBuilder = new GsonBuilder();
       Gson gson = gsonBuilder.create();
-      long waitTimeInSeconds = 10;
+      long waitTimeInSeconds = 20;
 
       List<String> hostList = Arrays.asList(host.split("\n"));
       for (String host : hostList) {
-        String command =
-            "ssh -o StrictHostKeyChecking=no -i " + SSH_KEY + " root@"
-                + host
-                + " 'yum install -y vim htop curl wget mlocate;/etc/init.d/iptables stop'";
+        String command = "ssh -o StrictHostKeyChecking=no -i " + SSH_KEY + " root@" + host + " 'yum install -y vim " +
+          "htop curl wget mlocate;/etc/init.d/iptables stop'";
         executeCommand(command);
       }
 
@@ -92,14 +93,10 @@ public class InstallUI extends AbstractIT {
             Map<String, Map> buildInfo = entry.getValue();
             if (((Map) buildInfo.get("platforms").get("centos6")).get("status").equals("pass")) {
               String repoView = (String) ((Map) buildInfo.get("platforms").get("centos6"))
-                  .get("repo_view");
-              String command =
-                  "ssh -o StrictHostKeyChecking=no -i " + SSH_KEY
-                      + " root@" + hostList.get(0) + " 'echo \"" + repoView
-                      + "\" > /etc/yum.repos.d/ambari.repo;"
-                      + "yum install ambari-server -y;"
-                      + "ambari-server setup -s;"
-                      + "ambari-server start'";
+                .get("repo_view");
+              String command = "ssh -o StrictHostKeyChecking=no -i " + SSH_KEY + " root@" + hostList.get(0) +
+                " 'echo" + " \"" + repoView + "\" > /etc/yum.repos.d/ambari.repo;" +
+                "yum install ambari-server -y;ambari-server setup -s;ambari-server start'";
               executeCommand(command);
               break;
             }
@@ -183,12 +180,12 @@ public class InstallUI extends AbstractIT {
 
       try {
         while (driver.findElement(By.xpath("//*[@id='confirm-hosts']/div[3]/button[2]"))
-            .getAttribute("disabled") != null) {
+          .getAttribute("disabled") != null) {
           sleep(1000, false);
         }
         String hostConfirmation = pollingWait(By.xpath("//*[@id='confirm-hosts']/div[2]"),
-            waitTimeInSeconds)
-            .getText();
+          waitTimeInSeconds)
+          .getText();
         if (hostConfirmation.contains("success")) {
           pollingWait(By.className("btn-success"), waitTimeInSeconds).click();
         } else {
@@ -258,13 +255,19 @@ public class InstallUI extends AbstractIT {
 
       pollingWait(By.xpath("//div//li/a[contains(.,'SmartSense')]"), waitTimeInSeconds).click();
       pollingWait(By.xpath("//div//li/a[contains(.,'Activity Analysis')]"), waitTimeInSeconds)
-          .click();
+        .click();
       driver.findElement(By.xpath("//div/input[@type='password'][1]")).sendKeys("admin");
       driver.findElement(By.xpath("//div/input[@type='password'][2]")).sendKeys("admin");
 
       sleep(5000, false);
       pollingWait(By.className("btn-success"), waitTimeInSeconds).click();
       sleep(5000, false);
+      try {
+        pollingWait(By.className("btn-danger"), waitTimeInSeconds).click();
+        sleep(5000, false);
+      } catch (Exception e) {
+      }
+
       pollingWait(By.className("btn-success"), waitTimeInSeconds).click();
       sleep(5000, false);
       pollingWait(By.className("btn-success"), waitTimeInSeconds).click();
