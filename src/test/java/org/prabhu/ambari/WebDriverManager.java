@@ -17,18 +17,35 @@
 
 package org.prabhu.ambari;
 
-import org.apache.commons.io.FileUtils;
-import org.openqa.selenium.Dimension;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.firefox.FirefoxBinary;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxProfile;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.SystemUtils;
+import org.openqa.selenium.By;
+import org.openqa.selenium.TimeoutException;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.firefox.FirefoxBinary;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxDriver.SystemProperty;
+import org.openqa.selenium.firefox.FirefoxDriverLogLevel;
+import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.firefox.FirefoxProfile;
+import org.openqa.selenium.firefox.GeckoDriverService;
+import org.openqa.selenium.safari.SafariDriver;
+import org.openqa.selenium.support.ui.ExpectedCondition;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import org.rauschig.jarchivelib.Archiver;
+import org.rauschig.jarchivelib.ArchiverFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class WebDriverManager {
@@ -37,24 +54,27 @@ public class WebDriverManager {
 
   public static String downLoadsDir = "";
 
+  private static String GECKODRIVER_VERSION = "0.20.1";
+
   public static WebDriver getWebDriver(String url) {
     WebDriver driver = null;
 
     if (driver == null) {
       try {
         FirefoxBinary ffox = new FirefoxBinary();
-        ffox.setTimeout(120000);
+        if ("true".equals(System.getenv("TRAVIS"))) {
+          ffox.setEnvironmentProperty("DISPLAY", ":99"); // xvfb is supposed to
+          // run with DISPLAY 99
+        }
         int firefoxVersion = WebDriverManager.getFirefoxVersion();
         LOG.info("Firefox version " + firefoxVersion + " detected");
 
+//        downLoadsDir = FileUtils.getTempDirectory().toString();
         downLoadsDir = "/tmp/";
 
-        String tempPath = downLoadsDir + "firebug/";
+        String tempPath = downLoadsDir + "/firefox/";
 
-//        downloadFireBug(firefoxVersion, tempPath);
-
-        final String firebugPath = tempPath + "firebug.xpi";
-        final String firepathPath = tempPath + "firepath.xpi";
+        downloadGeekoDriver(firefoxVersion, tempPath);
 
         FirefoxProfile profile = new FirefoxProfile();
         profile.setPreference("browser.download.folderList", 2);
@@ -67,55 +87,127 @@ public class WebDriverManager {
         profile.setPreference("app.update.enabled", false);
         profile.setPreference("dom.max_script_run_time", 0);
         profile.setPreference("dom.max_chrome_script_run_time", 0);
-        profile.setPreference("browser.helperApps.neverAsk.saveToDisk", "application/x-ustar,application/octet-stream,application/zip,text/csv,text/plain");
+        profile.setPreference("browser.helperApps.neverAsk.saveToDisk",
+            "application/x-ustar,application/octet-stream,application/zip,text/csv,text/plain");
         profile.setPreference("network.proxy.type", 0);
 
-//        profile.addExtension(new File(firebugPath));
-//        profile.addExtension(new File(firepathPath));
+        System.setProperty(GeckoDriverService.GECKO_DRIVER_EXE_PROPERTY, tempPath + "geckodriver");
+        System.setProperty(SystemProperty.DRIVER_USE_MARIONETTE, tempPath + "geckodriver");
 
-        driver = new FirefoxDriver(ffox, profile);
+        FirefoxOptions firefoxOptions = new FirefoxOptions();
+        firefoxOptions.setBinary(ffox);
+        firefoxOptions.setProfile(profile);
+        firefoxOptions.setLogLevel(FirefoxDriverLogLevel.INFO);
+
+        Map<String, String> environment = new HashMap<>();
+        if ("true".equals(System.getenv("TRAVIS"))) {
+          environment.put("DISPLAY", ":99");
+        }
+
+        GeckoDriverService gecko = new GeckoDriverService.Builder()
+            .usingPort(0)
+            .withEnvironment(environment)
+            .build();
+        gecko.start();
+
+        driver = new FirefoxDriver(gecko);
+
       } catch (Exception e) {
         LOG.error("Exception in WebDriverManager while FireFox Driver ", e);
       }
     }
 
-    if (url.equals("")) {
-      url = "http://c6401.ambari.apache.org:8080";
+    if (driver == null) {
+      try {
+        driver = new ChromeDriver();
+      } catch (Exception e) {
+        LOG.error("Exception in WebDriverManager while ChromeDriver ", e);
+      }
     }
+
+    if (driver == null) {
+      try {
+        driver = new SafariDriver();
+      } catch (Exception e) {
+        LOG.error("Exception in WebDriverManager while SafariDriver ", e);
+      }
+    }
+
+
+    long start = System.currentTimeMillis();
+    boolean loaded = false;
+    driver.manage().timeouts().implicitlyWait(10,
+        TimeUnit.SECONDS);
     driver.get(url);
-    driver.manage().window().setSize(new Dimension(1000, 1000));
+
+    while (System.currentTimeMillis() - start < 60 * 1000) {
+      // wait for page load
+      try {
+        (new WebDriverWait(driver, 30)).until(new ExpectedCondition<Boolean>() {
+          @Override
+          public Boolean apply(WebDriver d) {
+            return d.findElement(By.xpath("//div[@class='logo']"))
+                .isDisplayed();
+          }
+        });
+        loaded = true;
+        break;
+      } catch (TimeoutException e) {
+        LOG.info("Exception in WebDriverManager while WebDriverWait ", e);
+        driver.navigate().to(url);
+      }
+    }
+
+    if (loaded == false) {
+      fail();
+    }
+
+    driver.manage().window().maximize();
     return driver;
   }
 
-  private static void downloadFireBug(int firefoxVersion, String tempPath) {
-    String firebugUrlString = null;
-    if (firefoxVersion < 23)
-      firebugUrlString = "http://getfirebug.com/releases/firebug/1.11/firebug-1.11.4.xpi";
-    else if (firefoxVersion >= 23 && firefoxVersion < 30)
-      firebugUrlString = "http://getfirebug.com/releases/firebug/1.12/firebug-1.12.8.xpi";
-    else if (firefoxVersion >= 30)
-      firebugUrlString = "http://getfirebug.com/releases/firebug/2.0/firebug-2.0.7.xpi";
+  public static void downloadGeekoDriver(int firefoxVersion, String tempPath) {
+    String geekoDriverUrlString =
+        "https://github.com/mozilla/geckodriver/releases/download/v" + GECKODRIVER_VERSION
+            + "/geckodriver-v" + GECKODRIVER_VERSION + "-";
 
-
-    LOG.info("firebug version: " + firefoxVersion + ", will be downloaded to " + tempPath);
+    LOG.info("Geeko version: " + firefoxVersion + ", will be downloaded to " + tempPath);
     try {
-      File firebugFile = new File(tempPath + "firebug.xpi");
-      URL firebugUrl = new URL(firebugUrlString);
-      if (!firebugFile.exists()) {
-        FileUtils.copyURLToFile(firebugUrl, firebugFile);
+      if (SystemUtils.IS_OS_WINDOWS) {
+        if (System.getProperty("sun.arch.data.model").equals("64")) {
+          geekoDriverUrlString += "win64.zip";
+        } else {
+          geekoDriverUrlString += "win32.zip";
+        }
+      } else if (SystemUtils.IS_OS_LINUX) {
+        if (System.getProperty("sun.arch.data.model").equals("64")) {
+          geekoDriverUrlString += "linux64.tar.gz";
+        } else {
+          geekoDriverUrlString += "linux32.tar.gz";
+        }
+      } else if (SystemUtils.IS_OS_MAC_OSX) {
+        geekoDriverUrlString += "macos.tar.gz";
       }
 
-
-      File firepathFile = new File(tempPath + "firepath.xpi");
-      URL firepathUrl = new URL("https://addons.cdn.mozilla.net/user-media/addons/11900/firepath-0.9.7.1-fx.xpi");
-      if (!firepathFile.exists()) {
-        FileUtils.copyURLToFile(firepathUrl, firepathFile);
+      File geekoDriver = new File(tempPath + "geckodriver");
+      File geekoDriverZip = new File(tempPath + "geckodriver.tar");
+      File geekoDriverDir = new File(tempPath);
+      URL geekoDriverUrl = new URL(geekoDriverUrlString);
+      if (!geekoDriver.exists()) {
+        FileUtils.copyURLToFile(geekoDriverUrl, geekoDriverZip);
+        if (SystemUtils.IS_OS_WINDOWS) {
+          Archiver archiver = ArchiverFactory.createArchiver("zip");
+          archiver.extract(geekoDriverZip, geekoDriverDir);
+        } else {
+          Archiver archiver = ArchiverFactory.createArchiver("tar", "gz");
+          archiver.extract(geekoDriverZip, geekoDriverDir);
+        }
       }
 
     } catch (IOException e) {
-      LOG.error("Download of firebug version: " + firefoxVersion + ", falied in path " + tempPath);
+      LOG.error("Download of Geeko version: " + firefoxVersion + ", falied in path " + tempPath);
     }
-    LOG.info("Download of firebug version: " + firefoxVersion + ", successful");
+    LOG.info("Download of Geeko version: " + firefoxVersion + ", successful");
   }
 
   public static int getFirefoxVersion() {
@@ -124,8 +216,10 @@ public class WebDriverManager {
       if (System.getProperty("os.name").startsWith("Mac OS")) {
         firefoxVersionCmd = "/Applications/Firefox.app/Contents/MacOS/" + firefoxVersionCmd;
       }
-      String versionString = (String) CommandExecutor.executeCommandLocalHost(firefoxVersionCmd, false, ProcessData.Types_Of_Data.OUTPUT);
-      return Integer.valueOf(versionString.replaceAll("Mozilla Firefox", "").trim().substring(0, 2));
+      String versionString = (String) CommandExecutor
+          .executeCommandLocalHost(firefoxVersionCmd, false, ProcessData.Types_Of_Data.OUTPUT);
+      return Integer
+          .valueOf(versionString.replaceAll("Mozilla Firefox", "").trim().substring(0, 2));
     } catch (Exception e) {
       LOG.error("Exception in WebDriverManager while getWebDriver ", e);
       return -1;
