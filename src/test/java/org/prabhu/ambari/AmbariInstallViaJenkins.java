@@ -27,6 +27,7 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
+import org.junit.After;
 import org.junit.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
@@ -39,10 +40,15 @@ public class AmbariInstallViaJenkins extends AbstractIT {
   private static final Logger LOG = LoggerFactory.getLogger(AmbariInstallViaJenkins.class);
 
 
-  String COOKIE_VALUE = "node0uaaf9wskhk807gcfbl7jp2j0540071.node0";
+  String COOKIE_VALUE = "node053h5raq74zsd1qcikd86iy4kc543408.node0";
   String AMBARI_URL = "http://release.eng.hortonworks.com/hwre-api/versioninfo?stack=AMBARI&stack_version=2.7.0.0&per_page=10";
   String HDP_URL = "http://release.eng.hortonworks.com/hwre-api/versioninfo?stack=HDP&stack_version=3.0.0.0&per_page=10";
 
+
+  @After
+  public void cleanup() {
+    driver.close();
+  }
 
   @Test
   public void testAngularDisplay() throws Exception {
@@ -81,12 +87,12 @@ public class AmbariInstallViaJenkins extends AbstractIT {
           "registry.eng.hortonworks.com/hortonworks/hdp-centos7:" + hdpVersion);
 
       //PLATFORM
-      updateSelectValue(selectIdx++, "RHEL7");
+      updateSelectValue(selectIdx++, "RHEL7.4");
 
       //IMAGE_TYPE
       updateSelectValue(selectIdx++, "hwqe.xlarge");
 
-      //lifefime
+      //LIFETIME
       emptyTextAndPut(textIdx++, "120");
 
       //numberOfInstance
@@ -138,7 +144,7 @@ public class AmbariInstallViaJenkins extends AbstractIT {
 
       //RUN_QE_TETS
       selectIdx = 21;
-      updateSelectValue(selectIdx++, "no");
+      updateSelectValue(selectIdx++, "yes");
 
       //VERSION
       emptyTextAndPut(textIdx++, "2");
@@ -357,7 +363,6 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       //HDP_UTILS_REPO_BASEURL
       emptyTextAndPut(textIdx++, "");
 
-      
       //HUE_DB
       emptyTextAndPut(textIdx++, "mysql");
 
@@ -378,7 +383,6 @@ public class AmbariInstallViaJenkins extends AbstractIT {
 
       //AMBARI_AGENT_USER
       emptyTextAndPut(textIdx++, "root");
-
 
       //RUN_INDIVIDUAL_TESTS
       emptyTextAndPut(textIdx++, "");
@@ -435,7 +439,7 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       emptyTextAndPut(textIdx++, "no");
 
       //VIDEO_RECORDING
-      emptyTextAndPut(textIdx++, "no");
+      emptyTextAndPut(textIdx++, "true");
 
       //RUN_QE_TESTS_ONLY
       updateSelectValue(selectIdx++, "no");
@@ -453,7 +457,8 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       emptyTextAndPut(textIdx++, "https://qa-cloudbreak-api.sequenceiq.com");
 
       //CLOUDBREAK_TEST_SUITES
-      emptyTextAndPut(textIdx++, "classpath:/testsuites/resourcetests.yaml,classpath:/testsuites/openstack-resourcetests.yaml,classpath:/testsuites/openstack/credandsmoke/openstack-clustercreate-startstop-updown.yaml,classpath:/testsuites/nativeos/credandsmoke/nativeos-clustercreate-startstop-updown.yaml");
+      emptyTextAndPut(textIdx++,
+          "classpath:/testsuites/resourcetests.yaml,classpath:/testsuites/openstack-resourcetests.yaml,classpath:/testsuites/openstack/credandsmoke/openstack-clustercreate-startstop-updown.yaml,classpath:/testsuites/nativeos/credandsmoke/nativeos-clustercreate-startstop-updown.yaml");
 
       //RUN_MARKER_VERSION
       emptyTextAndPut(textIdx++, "");
@@ -468,7 +473,7 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       emptyTextAndPut(textIdx++, "no");
 
       //LOGSEARCH_ENABLE
-      emptyTextAndPut(textIdx++, "no");
+      //emptyTextAndPut(textIdx++, "no");
 
       //LOGSEARCH_BASE_URL
       emptyTextAndPut(textIdx++, "http://172.22.122.198:61888");
@@ -566,7 +571,6 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       //BAKED_IMAGE_TYPE
       emptyTextAndPut(textIdx++, "hdp");
 
-      
       //INSTALL_DRUID
       emptyTextAndPut(textIdx++, "no");
 
@@ -727,7 +731,7 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       emptyTextAndPut(textIdx++, "False");
 
       //BIGSQL_REPO
-      updateSelectValue(selectIdx++, "");
+      emptyTextAndPut(textIdx++, "");
 
       //INSTALL_DP_PROFILER_AGENT
       updateSelectValue(selectIdx++, "no");
@@ -780,7 +784,7 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       //INSTALL_DAS
       emptyTextAndPut(textIdx++, "no");
 
-
+      driver.findElements(By.xpath("//form/table//button[contains(.,'Build')]")).get(0).click();
     } catch (Exception e) {
       handleException("Exception in InstallUI while testAngularDisplay ", e);
     }
@@ -788,12 +792,12 @@ public class AmbariInstallViaJenkins extends AbstractIT {
 
   private void emptyTextAndPut(Integer index, String value) {
     driver.findElements(By.xpath("//form/table//input[@type='text']")).get(index).clear();
-    sleep(200);
+    sleep(100);
     driver.findElements(By.xpath("//form/table//input[@type='text']")).get(index).sendKeys(value);
   }
 
   private void updateSelectValue(Integer index, String value) {
-    sleep(200);
+    sleep(100);
     (new Select(driver.findElements(By.xpath("//form/table//select")).get(index)))
         .selectByValue(value);
 
