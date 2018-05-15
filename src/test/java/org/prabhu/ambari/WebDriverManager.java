@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Cookie;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -56,7 +57,7 @@ public class WebDriverManager {
 
   private static String GECKODRIVER_VERSION = "0.20.1";
 
-  public static WebDriver getWebDriver(String url) {
+  public static WebDriver getWebDriver(String url, Cookie cookie) {
     WebDriver driver = null;
 
     if (driver == null) {
@@ -133,12 +134,16 @@ public class WebDriverManager {
       }
     }
 
-
     long start = System.currentTimeMillis();
     boolean loaded = false;
     driver.manage().timeouts().implicitlyWait(10,
         TimeUnit.SECONDS);
+
     driver.get(url);
+    if (cookie != null) {
+      driver.manage().addCookie(cookie);
+      driver.navigate().refresh();
+    }
 
     while (System.currentTimeMillis() - start < 60 * 1000) {
       // wait for page load

@@ -129,7 +129,7 @@ public class InstallUI extends AbstractIT {
       }
       rd.close();
 
-      driver = WebDriverManager.getWebDriver(webHostUrl);
+      driver = WebDriverManager.getWebDriver(webHostUrl, null);
 
       driver.findElement(By.className("login-user-name")).sendKeys("admin");
       driver.findElement(By.className("login-user-password")).sendKeys("admin");

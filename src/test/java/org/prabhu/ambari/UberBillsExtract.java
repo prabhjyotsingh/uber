@@ -49,7 +49,7 @@ public class UberBillsExtract extends AbstractIT {
 
   @Before
   public void startUp() {
-    driver = WebDriverManager.getWebDriver("https://riders.uber.com/trips");
+    driver = WebDriverManager.getWebDriver("https://riders.uber.com/trips", null);
   }
 
   @After
