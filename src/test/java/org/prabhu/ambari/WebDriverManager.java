@@ -145,28 +145,6 @@ public class WebDriverManager {
       driver.navigate().refresh();
     }
 
-    while (System.currentTimeMillis() - start < 60 * 1000) {
-      // wait for page load
-      try {
-        (new WebDriverWait(driver, 30)).until(new ExpectedCondition<Boolean>() {
-          @Override
-          public Boolean apply(WebDriver d) {
-            return d.findElement(By.xpath("//div[@class='logo']"))
-                .isDisplayed();
-          }
-        });
-        loaded = true;
-        break;
-      } catch (TimeoutException e) {
-        LOG.info("Exception in WebDriverManager while WebDriverWait ", e);
-        driver.navigate().to(url);
-      }
-    }
-
-    if (loaded == false) {
-      fail();
-    }
-
     driver.manage().window().maximize();
     return driver;
   }

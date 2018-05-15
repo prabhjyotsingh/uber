@@ -85,6 +85,7 @@ public class UberBillsExtract extends AbstractIT {
       WebDriverManager.downLoadsDir = WebDriverManager.downLoadsDir + "uber/";
 
       StringBuilder csvFile = new StringBuilder();
+      StringBuilder errorUrl = new StringBuilder();
       Integer nos = 1;
       for (String urlId : tripIds) {
         String tripUrl = "https://riders.uber.com/trips/";
@@ -109,11 +110,12 @@ public class UberBillsExtract extends AbstractIT {
           takeScreenshot(urlId, date);
           nos++;
         } catch (Exception e) {
-          System.out.println("failed to process this URL" + tripUrl + urlId);
+          errorUrl.append("failed to process this URL" + tripUrl + urlId).append("\n");
         }
         csvFile.append("\n");
       }
 
+      System.out.println(errorUrl);
       System.out.println(csvFile);
 
     } catch (Exception e) {
