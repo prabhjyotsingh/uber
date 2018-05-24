@@ -40,7 +40,7 @@ public class AmbariInstallViaJenkins extends AbstractIT {
   private static final Logger LOG = LoggerFactory.getLogger(AmbariInstallViaJenkins.class);
 
 
-  String COOKIE_VALUE = "node053h5raq74zsd1qcikd86iy4kc543408.node0";
+  String COOKIE_VALUE = "node0l3nqoh7vk8al1c7e79c7ifhio603812.node0";
   String AMBARI_URL = "http://release.eng.hortonworks.com/hwre-api/versioninfo?stack=AMBARI&stack_version=2.7.0.0&per_page=10";
   String HDP_URL = "http://release.eng.hortonworks.com/hwre-api/versioninfo?stack=HDP&stack_version=3.0.0.0&per_page=10";
 
@@ -84,7 +84,7 @@ public class AmbariInstallViaJenkins extends AbstractIT {
 
       //Ami
       emptyTextAndPut(textIdx++,
-          "registry.eng.hortonworks.com/hortonworks/hdp-centos7:" + hdpVersion);
+          "registry.eng.hortonworks.com/hortonworks/hdp-centos7.4:" + hdpVersion);
 
       //PLATFORM
       updateSelectValue(selectIdx++, "RHEL7.4");
@@ -96,7 +96,7 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       emptyTextAndPut(textIdx++, "120");
 
       //numberOfInstance
-      emptyTextAndPut(textIdx++, "5");
+      emptyTextAndPut(textIdx++, "3");
 
       //RUN_INSTALLER
       updateSelectValue(selectIdx++, "deployng");
@@ -130,6 +130,8 @@ public class AmbariInstallViaJenkins extends AbstractIT {
 
       //INSTALL_FLUME
       emptyTextAndPut(textIdx++, "no");
+      //INSTALL_STORM
+      updateSelectValue(selectIdx++, "no");
       //INSTALL_KNOX
       emptyTextAndPut(textIdx++, "yes");
 
@@ -152,11 +154,11 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       //SHUTDOWN_CLUSTER
       updateSelectValue(selectIdx++, "no");
       //TESTSUITE_FILE
-      emptyTextAndPut(textIdx++, "ZeppelinSpark2");
+      emptyTextAndPut(textIdx++, "ZeppelinSSO");
       //AMBARI_TESTSNAMES
       emptyTextAndPut(textIdx++, "");
       //EMAIL
-      emptyTextAndPut(textIdx++, "int-nightly-group@hortonworks.com");
+      emptyTextAndPut(textIdx++, "prabhjyot.singh@hortonworks.com");
       //HMC_DEPLOY_REPORT
       updateSelectValue(selectIdx++, "no");
       //INSTALL_JDK
@@ -228,7 +230,7 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       //CLIENT
       emptyTextAndPut(textIdx++, "localhost");
       //WIRE_ENCRYPTION
-      updateSelectValue(selectIdx++, "yes");
+      updateSelectValue(selectIdx++, "no");
       //PUSH_AMBARIARTIFACTS
       emptyTextAndPut(textIdx++, "");
       //STACK_UPGRADE_TO
@@ -683,7 +685,7 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       emptyTextAndPut(textIdx++, "false");
 
       //ENABLE_KNOX_SSO
-      updateSelectValue(selectIdx++, "no");
+      updateSelectValue(selectIdx++, "yes");
 
       //INSTALL_SUPERSET
       updateSelectValue(selectIdx++, "no");
@@ -792,12 +794,12 @@ public class AmbariInstallViaJenkins extends AbstractIT {
 
   private void emptyTextAndPut(Integer index, String value) {
     driver.findElements(By.xpath("//form/table//input[@type='text']")).get(index).clear();
-    sleep(100);
+    sleep(50);
     driver.findElements(By.xpath("//form/table//input[@type='text']")).get(index).sendKeys(value);
   }
 
   private void updateSelectValue(Integer index, String value) {
-    sleep(100);
+    sleep(50);
     (new Select(driver.findElements(By.xpath("//form/table//select")).get(index)))
         .selectByValue(value);
 
