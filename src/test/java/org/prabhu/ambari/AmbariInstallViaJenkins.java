@@ -40,7 +40,7 @@ public class AmbariInstallViaJenkins extends AbstractIT {
   private static final Logger LOG = LoggerFactory.getLogger(AmbariInstallViaJenkins.class);
 
 
-  String COOKIE_VALUE = "node0l3nqoh7vk8al1c7e79c7ifhio603812.node0";
+  String COOKIE_VALUE = "node01kl2bso8kzq6a1n6fv20e6glj662206.node0";
   String AMBARI_URL = "http://release.eng.hortonworks.com/hwre-api/versioninfo?stack=AMBARI&stack_version=2.7.0.0&per_page=10";
   String HDP_URL = "http://release.eng.hortonworks.com/hwre-api/versioninfo?stack=HDP&stack_version=3.0.0.0&per_page=10";
 
@@ -820,6 +820,8 @@ public class AmbariInstallViaJenkins extends AbstractIT {
     conn.setRequestMethod("GET");
     BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
     String line;
+    Integer minorVersionNumber = 0;
+    String versionNumber = null;
     try {
       while ((line = rd.readLine()) != null) {
         Map<String, Map> build = gson.fromJson(line, Map.class);
@@ -828,7 +830,11 @@ public class AmbariInstallViaJenkins extends AbstractIT {
           Map<String, Map> buildInfo = entry.getValue();
           if (((Map) buildInfo.get("platforms").get("centos7")).get("compile_status")
               .equals("pass")) {
-            return entry.getKey();
+            Integer temp = new Integer(((String) entry.getKey()).split("-")[1]);
+            if (temp > minorVersionNumber) {
+              minorVersionNumber = temp;
+              versionNumber = entry.getKey();
+            }
           }
         }
         break;
@@ -837,7 +843,7 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       rd.close();
     }
 
-    return null;
+    return versionNumber;
   }
 
 }
