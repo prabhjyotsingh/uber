@@ -43,6 +43,7 @@ public class AmbariInstallViaJenkins extends AbstractIT {
   String COOKIE_VALUE = "node04990b4t2my2g195mwaqe5z41m735806.node0";
   String AMBARI_URL = "http://release.eng.hortonworks.com/hwre-api/versioninfo?stack=AMBARI&stack_version=2.7.0.0&per_page=10";
   String HDP_URL = "http://release.eng.hortonworks.com/hwre-api/versioninfo?stack=HDP&stack_version=3.0.0.0&per_page=10";
+  Long SLEEP_DURATION = 5l;
 
 
   @After
@@ -799,12 +800,12 @@ public class AmbariInstallViaJenkins extends AbstractIT {
 
   private void emptyTextAndPut(Integer index, String value) {
     driver.findElements(By.xpath("//form/table//input[@type='text']")).get(index).clear();
-    sleep(50);
+    sleep(SLEEP_DURATION);
     driver.findElements(By.xpath("//form/table//input[@type='text']")).get(index).sendKeys(value);
   }
 
   private void updateSelectValue(Integer index, String value) {
-    sleep(50);
+    sleep(SLEEP_DURATION);
     (new Select(driver.findElements(By.xpath("//form/table//select")).get(index)))
         .selectByValue(value);
 
