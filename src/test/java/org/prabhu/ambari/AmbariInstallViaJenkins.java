@@ -40,7 +40,7 @@ public class AmbariInstallViaJenkins extends AbstractIT {
   private static final Logger LOG = LoggerFactory.getLogger(AmbariInstallViaJenkins.class);
 
 
-  String COOKIE_VALUE = "node01kl2bso8kzq6a1n6fv20e6glj662206.node0";
+  String COOKIE_VALUE = "node04990b4t2my2g195mwaqe5z41m735806.node0";
   String AMBARI_URL = "http://release.eng.hortonworks.com/hwre-api/versioninfo?stack=AMBARI&stack_version=2.7.0.0&per_page=10";
   String HDP_URL = "http://release.eng.hortonworks.com/hwre-api/versioninfo?stack=HDP&stack_version=3.0.0.0&per_page=10";
 
@@ -51,7 +51,7 @@ public class AmbariInstallViaJenkins extends AbstractIT {
   }
 
   @Test
-  public void testAngularDisplay() throws Exception {
+  public void install() throws Exception {
     try {
 
       GsonBuilder gsonBuilder = new GsonBuilder();
@@ -100,9 +100,14 @@ public class AmbariInstallViaJenkins extends AbstractIT {
 
       //RUN_INSTALLER
       updateSelectValue(selectIdx++, "deployng");
-      //GS_BRANCH
+
       emptyTextAndPut(textIdx++, "");
+      //GS_BRANCH
       emptyTextAndPut(textIdx++, "hdp2");
+
+      //HMC_VERSION =1
+      //ENABLE_MULTIPLE_CLUSTERS = no
+
       //HMC_RPM_URL
       emptyTextAndPut(textIdx++, "");
 
@@ -788,7 +793,7 @@ public class AmbariInstallViaJenkins extends AbstractIT {
 
       driver.findElements(By.xpath("//form/table//button[contains(.,'Build')]")).get(0).click();
     } catch (Exception e) {
-      handleException("Exception in InstallUI while testAngularDisplay ", e);
+      handleException("Exception in InstallUI while install ", e);
     }
   }
 

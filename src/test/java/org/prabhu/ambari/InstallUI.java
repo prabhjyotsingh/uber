@@ -275,7 +275,7 @@ public class InstallUI extends AbstractIT {
       LOG.info("testCreateNotebook Test executed");
 
     } catch (Exception e) {
-      handleException("Exception in InstallUI while testAngularDisplay ", e);
+      handleException("Exception in InstallUI while install ", e);
     }
 
   }
