@@ -40,7 +40,7 @@ public class AmbariInstallViaJenkins extends AbstractIT {
   private static final Logger LOG = LoggerFactory.getLogger(AmbariInstallViaJenkins.class);
 
 
-  String COOKIE_VALUE = "node04990b4t2my2g195mwaqe5z41m735806.node0";
+  String COOKIE_VALUE = "node017r33r9u54lcoaledeq1jtfj9776758.node0";
   String AMBARI_URL = "http://release.eng.hortonworks.com/hwre-api/versioninfo?stack=AMBARI&stack_version=2.7.0.0&per_page=10";
   String HDP_URL = "http://release.eng.hortonworks.com/hwre-api/versioninfo?stack=HDP&stack_version=3.0.0.0&per_page=10";
   Long SLEEP_DURATION = 5l;
@@ -226,9 +226,9 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       //NOTIFY_ON_FAILURE
       emptyTextAndPut(textIdx++, "no");
       //AMBARI_BRANCH
-      emptyTextAndPut(textIdx++, "ambari2.6-maint");
+      emptyTextAndPut(textIdx++, "ambari2.7-maint");
       //CLIENT_OS
-      emptyTextAndPut(textIdx++, "");
+      emptyTextAndPut(textIdx++, "LINUX");
       //CLIENT_PORT
       emptyTextAndPut(textIdx++, "5566");
       //BROWSER
@@ -289,7 +289,7 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       //USER_REALM	
       emptyTextAndPut(textIdx++, "EXAMPLE.COM");
       //AMBARI_OLD_BRANCH
-      emptyTextAndPut(textIdx++, "");
+      emptyTextAndPut(textIdx++, "none");
       //FALCON_REGRESSION_REPO
       emptyTextAndPut(textIdx++, "git@github.com:hortonworks/falcon.git");
       //FALCON_REGRESSION_BRANCH
@@ -335,10 +335,10 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       emptyTextAndPut(textIdx++, "5");
 
       //PARENT_RESULT_ID
-      emptyTextAndPut(textIdx++, "641746");
+      emptyTextAndPut(textIdx++, "656103");
 
       //NUM_OF_SPLITS
-      emptyTextAndPut(textIdx++, "2");
+      emptyTextAndPut(textIdx++, "1");
 
       //SPLIT_NUM
       emptyTextAndPut(textIdx++, "1");
@@ -356,7 +356,7 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       emptyTextAndPut(textIdx++, "3.0.0.0");
 
       //SPLIT_ID
-      emptyTextAndPut(textIdx++, "1163169");
+      emptyTextAndPut(textIdx++, "1188311");
 
       //DASHBOARD_HOST
       emptyTextAndPut(textIdx++, "dashboard.qe.hortonworks.com");
@@ -595,7 +595,7 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       emptyTextAndPut(textIdx++, "");
 
       //RUN_ID
-      emptyTextAndPut(textIdx++, "102008");
+      emptyTextAndPut(textIdx++, "107553");
 
       //TEST_JSON_FILE
       emptyTextAndPut(textIdx++, "HDP-3.0.json");
@@ -669,9 +669,6 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       //INSTALL_DSS
       emptyTextAndPut(textIdx++, "no");
 
-      //DP_REPO_URL
-      emptyTextAndPut(textIdx++, "");
-
       //ENABLE_DSX_PRE_SETUP
       updateSelectValue(selectIdx++, "no");
 
@@ -744,9 +741,6 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       //INSTALL_DP_PROFILER_AGENT
       updateSelectValue(selectIdx++, "no");
 
-      //DSS_REPO_URL
-      emptyTextAndPut(textIdx++, "");
-
       //DP_PROFILER_AGENT_DB
       updateSelectValue(selectIdx++, "mysql");
 
@@ -791,6 +785,12 @@ public class AmbariInstallViaJenkins extends AbstractIT {
 
       //INSTALL_DAS
       emptyTextAndPut(textIdx++, "no");
+
+      //DP_REPO_URL
+      emptyTextAndPut(textIdx++, "");
+
+      //DSS_REPO_URL
+      emptyTextAndPut(textIdx++, "");
 
       driver.findElements(By.xpath("//form/table//button[contains(.,'Build')]")).get(0).click();
     } catch (Exception e) {
