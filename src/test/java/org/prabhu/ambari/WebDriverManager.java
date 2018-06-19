@@ -55,7 +55,7 @@ public class WebDriverManager {
 
   public static String downLoadsDir = "";
 
-  private static String GECKODRIVER_VERSION = "0.20.1";
+  private static String GECKODRIVER_VERSION = "0.21.0";
 
   public static WebDriver getWebDriver(String url, Cookie cookie) {
     WebDriver driver = null;
