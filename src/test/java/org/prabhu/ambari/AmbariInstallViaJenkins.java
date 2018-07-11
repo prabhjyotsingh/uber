@@ -40,7 +40,7 @@ public class AmbariInstallViaJenkins extends AbstractIT {
   private static final Logger LOG = LoggerFactory.getLogger(AmbariInstallViaJenkins.class);
 
 
-  String COOKIE_VALUE = "node017r33r9u54lcoaledeq1jtfj9776758.node0";
+  String COOKIE_VALUE = "node0p79x7o7fjejk16o19p2c6b32k1065359.node0";
   String AMBARI_URL = "http://release.eng.hortonworks.com/hwre-api/versioninfo?stack=AMBARI&stack_version=2.7.0.0&per_page=10";
   String HDP_URL = "http://release.eng.hortonworks.com/hwre-api/versioninfo?stack=HDP&stack_version=3.0.0.0&per_page=10";
   Long SLEEP_DURATION = 5l;
@@ -834,13 +834,17 @@ public class AmbariInstallViaJenkins extends AbstractIT {
 
         for (Map.Entry<String, Map> entry : build.entrySet()) {
           Map<String, Map> buildInfo = entry.getValue();
-          if (((Map) buildInfo.get("platforms").get("centos7")).get("compile_status")
-              .equals("pass")) {
-            Integer temp = new Integer(((String) entry.getKey()).split("-")[1]);
-            if (temp > minorVersionNumber) {
-              minorVersionNumber = temp;
-              versionNumber = entry.getKey();
+          try {
+            if (((Map) buildInfo.get("platforms").get("centos7")).get("compile_status")
+                .equals("pass")) {
+              Integer temp = new Integer(((String) entry.getKey()).split("-")[1]);
+              if (temp > minorVersionNumber) {
+                minorVersionNumber = temp;
+                versionNumber = entry.getKey();
+              }
             }
+          }catch (NullPointerException e){
+            //ignore
           }
         }
         break;
