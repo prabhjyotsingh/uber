@@ -40,9 +40,9 @@ public class AmbariInstallViaJenkins extends AbstractIT {
   private static final Logger LOG = LoggerFactory.getLogger(AmbariInstallViaJenkins.class);
 
 
-  String COOKIE_VALUE = "node0p79x7o7fjejk16o19p2c6b32k1065359.node0";
-  String AMBARI_URL = "http://release.eng.hortonworks.com/hwre-api/versioninfo?stack=AMBARI&stack_version=2.7.0.0&per_page=10";
-  String HDP_URL = "http://release.eng.hortonworks.com/hwre-api/versioninfo?stack=HDP&stack_version=3.0.0.0&per_page=10";
+  String COOKIE_NAME = "JSESSIONID.b1a2e8e1";
+  String COOKIE_VALUE = "node0rwm1ghzyd48g5lzsg60sj1we35100.node0";
+  String HDP_URL = "http://release.eng.hortonworks.com/hwre-api/versioninfo?stack=HDP&stack_version=3.0.2.0&per_page=10";
   Long SLEEP_DURATION = 5l;
 
 
@@ -58,9 +58,8 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       GsonBuilder gsonBuilder = new GsonBuilder();
       Gson gson = gsonBuilder.create();
 
-//      String ambariVersion = getVersionNumber(AMBARI_URL, gson);
       String hdpVersion = getVersionNumber(HDP_URL, gson);
-      Cookie ck = new Cookie("JSESSIONID.4bb8a9da", COOKIE_VALUE);
+      Cookie ck = new Cookie(COOKIE_NAME, COOKIE_VALUE);
       driver = WebDriverManager.getWebDriver(
           "http://linux-jenkins.qe.hortonworks.com:8080/job/Nightly-Start-EC2-Run-HDP/", ck);
 
@@ -763,7 +762,7 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       updateSelectValue(selectIdx++, "no");
 
       //DLM_CLOUD_TYPE
-      updateSelectValue(selectIdx++, "none");
+      emptyTextAndPut(textIdx++, "none");
 
       //DLM_CLOUD_S3_ENCRYPTION_TYPE
       updateSelectValue(selectIdx++, "none");
