@@ -156,7 +156,7 @@ public class UberBillsExtract extends AbstractIT {
     File screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
     try {
       FileUtils.copyFile(screenshot,
-          new File(WebDriverManager.downLoadsDir + date + "--" + urlId + ".png"));
+          new File(WebDriverManager.downLoadsDir + date + "--" + urlId.split("/")[4] + ".png"));
     } catch (IOException e) {
       e.printStackTrace();
     }
