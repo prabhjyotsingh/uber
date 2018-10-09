@@ -20,7 +20,9 @@ import com.google.common.base.Function;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
@@ -46,10 +48,23 @@ public class UberBillsExtract extends AbstractIT {
 
   long waitTime = 2000;
   protected static final long MAX_PARAGRAPH_TIMEOUT_SEC = 60;
+  private Map<String, String> monthMap = new HashMap<>();
 
   @Before
   public void startUp() {
     driver = WebDriverManager.getWebDriver("https://riders.uber.com/trips", null);
+    monthMap.put("01", "January");
+    monthMap.put("02", "February");
+    monthMap.put("03", "March");
+    monthMap.put("04", "April");
+    monthMap.put("05", "May");
+    monthMap.put("06", "June");
+    monthMap.put("07", "July");
+    monthMap.put("08", "August");
+    monthMap.put("09", "September");
+    monthMap.put("10", "October");
+    monthMap.put("11", "November");
+    monthMap.put("12", "December");
   }
 
   @After
@@ -63,16 +78,13 @@ public class UberBillsExtract extends AbstractIT {
     try {
 
       List<String> monthArray = new ArrayList<String>() {{
-        add("04");
-        add("05");
-        add("06");
-        add("07");
-        add("08");
+        add(monthMap.get("10"));
+        add(monthMap.get("09"));
       }};
       sleep(waitTime, false);
 
       driver.findElement(By.xpath(".//*[@name='textInputValue']"))
-          .sendKeys("username");
+          .sendKeys("uname");
       driver.findElement(By.xpath(".//*[@id='app-body']/div/div[1]/form/button")).click();
       driver.findElement(By.xpath(".//*[@id='password']")).sendKeys("password");
       driver.findElement(By.xpath(".//*[@id='app-body']/div/div[1]/form/button")).click();
@@ -81,8 +93,8 @@ public class UberBillsExtract extends AbstractIT {
 
       List<String> tripIds = new ArrayList<String>();
 
-      List<WebElement> tripElements = driver.findElements(
-          By.xpath(".//*[@id='trips-table']/tbody/tr[contains(@class,\"trip-expand__origin\")]"));
+      List<WebElement> tripElements = driver
+          .findElements(By.xpath(".//body/div/div/div[2]/div[1]/div[1]/div[1]/div[1]/div[2]/div"));
       tripIds.addAll(getTripIdForThisPage(tripElements, monthArray));
 
       WebDriverManager.downLoadsDir = WebDriverManager.downLoadsDir + "uber/";
@@ -91,29 +103,30 @@ public class UberBillsExtract extends AbstractIT {
       StringBuilder errorUrl = new StringBuilder();
       Integer nos = 1;
       for (String urlId : tripIds) {
-        String tripUrl = "https://riders.uber.com/trips/";
         try {
-          driver.get(tripUrl + urlId);
-          csvFile.append(nos).append(",").append(urlId).append(",");
+          driver.get(urlId);
+          if (!pollingWait(By.xpath(".//body/div/div/div[2]/div/div/div/div[2]/div"),
+              MAX_PARAGRAPH_TIMEOUT_SEC).getText().equalsIgnoreCase("cancelled")) {
+            sleep(waitTime, false);
+            csvFile.append(nos).append(",").append(urlId).append(",");
+            String date = pollingWait(
+                By.xpath(".//body/div/div/div[2]/div/div/div/div/span"),
+                MAX_PARAGRAPH_TIMEOUT_SEC).getText()
+                .split(",")[0];
+            csvFile.append("\"").append(date).append("\",").append("Uber,");
 
-          String date = pollingWait(
-              By.xpath(".//*[@id='slide-menu-content']//div[@class='page-lead']/div"),
-              MAX_PARAGRAPH_TIMEOUT_SEC).getText()
-              .split("on")[1];
-          csvFile.append("\"").append(date).append("\",").append("Uber,");
+            driver.switchTo().frame(driver.findElement(By.tagName("iframe")));
+            List<WebElement> subTotalDivs = driver
+                .findElements(By.xpath(".//div[contains(.,'Subtotal')]"));
+            String amount = subTotalDivs.get(subTotalDivs.size() - 2).getText().split("₹")[1];
+            driver.switchTo().defaultContent();
 
-          driver.switchTo().frame(driver.findElement(By.id("receipt-frame")));
-          String amount = pollingWait(
-              By.xpath(".//*[@id='app-content']/div/div/div/div/div[contains(.,'Subtotal')]"),
-              MAX_PARAGRAPH_TIMEOUT_SEC)
-              .getText().split("₹")[1];
-          driver.switchTo().defaultContent();
-
-          csvFile.append(amount).append(",");
-          takeScreenshot(urlId, date);
-          nos++;
+            csvFile.append(amount).append(",");
+            takeScreenshot(urlId, date);
+            nos++;
+          }
         } catch (Exception e) {
-          errorUrl.append("failed to process this URL" + tripUrl + urlId).append("\n");
+          errorUrl.append("failed to process this URL" + urlId).append("\n");
         }
         csvFile.append("\n");
       }
@@ -152,25 +165,37 @@ public class UberBillsExtract extends AbstractIT {
   List<String> getTripIdForThisPage(List<WebElement> tripElements, List<String> monthArray) {
     List<String> tripIds = new ArrayList<String>();
     for (WebElement webElement : tripElements) {
-      if (webElement.findElement(By.className("text--right")).getText().contains("₹") &&
-          monthArray.contains(webElement.findElement(By.xpath(".//td[2]")).getText().split("/")[0])
+      if (webElement.findElement(By.xpath("div/div[2]/div[2]")).getText().contains("₹") &&
+          monthArray.contains(
+              webElement.findElement(By.xpath("div/div[2]/div[1]")).getText().split(" ")[1])
           ) {
-        tripIds.add(webElement.getAttribute("data-target").split("trip-")[1]);
-//        webElement.click();
+        if (!xpathExists(webElement, "div[2]/div[2]/div[3]/a")) {
+          webElement.findElement(By.xpath("div[1]/div[1]")).click();
+        }
+        tripIds
+            .add(webElement.findElement(By.xpath("div[2]/div[2]/div[3]/a")).getAttribute("href"));
       }
     }
 
     WebElement lastElement = tripElements.get(tripElements.size() - 1);
     if (monthArray
-        .contains(lastElement.findElement(By.xpath(".//td[2]")).getText().split("/")[0])) {
-      driver.findElement(By.xpath(".//*[@id='trips-pagination']/div[2]/a")).click();
+        .contains(lastElement.findElement(By.xpath("div/div[2]/div[1]")).getText().split(" ")[1])) {
+      driver.findElement(By.xpath(".//body/div/div/div[2]/div[1]/div[1]/div[1]/div[1]/div[3]/div"
+          + "[2]")).click();
       sleep(waitTime, false);
-      tripElements = driver.findElements(
-          By.xpath(".//*[@id='trips-table']/tbody/tr[contains(@class,\"trip-expand__origin\")]"));
+      tripElements = driver
+          .findElements(By.xpath(".//body/div/div/div[2]/div[1]/div[1]/div[1]/div[1]/div[2]/div"));
       tripIds.addAll(getTripIdForThisPage(tripElements, monthArray));
     }
 
     return tripIds;
+  }
+
+  private Boolean xpathExists(WebElement webElement, String xpath) {
+    driver.manage().timeouts().implicitlyWait(0, TimeUnit.MILLISECONDS);
+    boolean exists = webElement.findElements(By.xpath(xpath)).size() != 0;
+    driver.manage().timeouts().implicitlyWait(3, TimeUnit.SECONDS);
+    return exists;
   }
 
 }
