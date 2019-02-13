@@ -78,7 +78,12 @@ public class UberBillsExtract extends AbstractIT {
     try {
 
       List<String> monthArray = new ArrayList<String>() {{
+        add(monthMap.get("12"));
+        add(monthMap.get("11"));
         add(monthMap.get("10"));
+        add(monthMap.get("06"));
+        add(monthMap.get("07"));
+        add(monthMap.get("08"));
         add(monthMap.get("09"));
       }};
       sleep(waitTime, false);

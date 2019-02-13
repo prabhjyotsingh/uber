@@ -40,8 +40,8 @@ public class AmbariInstallViaJenkins extends AbstractIT {
   private static final Logger LOG = LoggerFactory.getLogger(AmbariInstallViaJenkins.class);
 
 
-  String COOKIE_NAME = "JSESSIONID.b1a2e8e1";
-  String COOKIE_VALUE = "node01j823vvu6iwta7ct1vj55jfha138368.node0";
+  String COOKIE_NAME = "JSESSIONID.983e1e0e";
+  String COOKIE_VALUE = "node01oamiqg8owa4lxngr7c17mbwt186990.node0";
   String HDP_URL = "http://release.eng.hortonworks.com/hwre-api/versioninfo?stack=HDP&stack_version=3.0.2.0&per_page=10";
   Long SLEEP_DURATION = 5l;
 
