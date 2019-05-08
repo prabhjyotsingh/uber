@@ -41,8 +41,8 @@ public class AmbariInstallViaJenkins extends AbstractIT {
 
 
   String COOKIE_NAME = "JSESSIONID.983e1e0e";
-  String COOKIE_VALUE = "node01oamiqg8owa4lxngr7c17mbwt186990.node0";
-  String HDP_URL = "http://release.eng.hortonworks.com/hwre-api/versioninfo?stack=HDP&stack_version=3.0.2.0&per_page=10";
+  String COOKIE_VALUE = "node01rawq1hpwpmfgpyi4a62s8j1e1126892.node0";
+  String HDP_URL = "http://release.eng.hortonworks.com/hwre-api/versioninfo?stack=HDP&stack_version=3.1.4.0&per_page=10";
   Long SLEEP_DURATION = 5l;
 
 
@@ -84,10 +84,10 @@ public class AmbariInstallViaJenkins extends AbstractIT {
 
       //Ami
       emptyTextAndPut(textIdx++,
-          "registry.eng.hortonworks.com/hortonworks/hdp-centos7.4:" + hdpVersion);
+          "registry.eng.hortonworks.com/hortonworks/hdp-centos7.6:" + hdpVersion);
 
       //PLATFORM
-      updateSelectValue(selectIdx++, "RHEL7.4");
+      updateSelectValue(selectIdx++, "RHEL7.6");
 
       //IMAGE_TYPE
       updateSelectValue(selectIdx++, "hwqe.xlarge");
@@ -197,7 +197,7 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       //FILTER_PATH
       emptyTextAndPut(textIdx++, "");
       //CERTIFICATION_TAG
-      emptyTextAndPut(textIdx++, "hdp3");
+      emptyTextAndPut(textIdx++, "HDP-3.1-maint");
       //JDK_VERSION
       emptyTextAndPut(textIdx++, "OpenJDK8");
       //UMASK
@@ -227,7 +227,7 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       //AMBARI_BRANCH
       emptyTextAndPut(textIdx++, "ambari2.7-maint");
       //CLIENT_OS
-      emptyTextAndPut(textIdx++, "LINUX");
+      emptyTextAndPut(textIdx++, "");
       //CLIENT_PORT
       emptyTextAndPut(textIdx++, "5566");
       //BROWSER
@@ -272,7 +272,7 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       emptyTextAndPut(textIdx++, "EXAMPLE.COM");
       //AMBARI_VERSION
       emptyTextAndPut(textIdx++,
-          "http://dev.hortonworks.com.s3.amazonaws.com/ambari/centos7/2.x/updates/2.7.0.0/ambariqe.repo");
+          "http://dev.hortonworks.com.s3.amazonaws.com/ambari/centos7/2.x/updates/2.7.4.0/ambariqe.repo");
       //EC2_ACCOUNT
       emptyTextAndPut(textIdx++, "hwqe");
       //EC2_SECURITY_GROUP
@@ -288,7 +288,7 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       //USER_REALM	
       emptyTextAndPut(textIdx++, "EXAMPLE.COM");
       //AMBARI_OLD_BRANCH
-      emptyTextAndPut(textIdx++, "none");
+      emptyTextAndPut(textIdx++, "");
       //FALCON_REGRESSION_REPO
       emptyTextAndPut(textIdx++, "git@github.com:hortonworks/falcon.git");
       //FALCON_REGRESSION_BRANCH
@@ -334,7 +334,7 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       emptyTextAndPut(textIdx++, "5");
 
       //PARENT_RESULT_ID
-      emptyTextAndPut(textIdx++, "656103");
+      emptyTextAndPut(textIdx++, "789767");
 
       //NUM_OF_SPLITS
       emptyTextAndPut(textIdx++, "1");
@@ -352,10 +352,10 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       updateSelectValue(selectIdx++, "no");
 
       //STACK
-      emptyTextAndPut(textIdx++, "3.0.0.0");
+      emptyTextAndPut(textIdx++, "3.1");
 
       //SPLIT_ID
-      emptyTextAndPut(textIdx++, "1188311");
+      emptyTextAndPut(textIdx++, "1440429");
 
       //DASHBOARD_HOST
       emptyTextAndPut(textIdx++, "dashboard.qe.hortonworks.com");
@@ -594,10 +594,10 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       emptyTextAndPut(textIdx++, "");
 
       //RUN_ID
-      emptyTextAndPut(textIdx++, "107553");
+      emptyTextAndPut(textIdx++, "149872");
 
       //TEST_JSON_FILE
-      emptyTextAndPut(textIdx++, "HDP-3.0.json");
+      emptyTextAndPut(textIdx++, "HDP-3.1.json");
 
       //YCLOUD_QUEUE
       emptyTextAndPut(textIdx++, "HDP_3_0_0_0-integration-tests");
@@ -639,13 +639,13 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       emptyTextAndPut(textIdx++, "master");
 
       //RELEASE_CONFIG_ID
-      emptyTextAndPut(textIdx++, "2256");
+      emptyTextAndPut(textIdx++, "3583");
 
       //TEST_COMPONENT_NAME
-      emptyTextAndPut(textIdx++, "ZeppelinSpark2");
+      emptyTextAndPut(textIdx++, "ZeppelinSSO");
 
       //RELEASE_NAME
-      emptyTextAndPut(textIdx++, "HDP-3.0.0.0");
+      emptyTextAndPut(textIdx++, "HDP-3.1.4.0");
 
       //LOG_COLLECTION_V2
       emptyTextAndPut(textIdx++, "no");
@@ -759,7 +759,7 @@ public class AmbariInstallViaJenkins extends AbstractIT {
       updateSelectValue(selectIdx++, "no");
 
       //ENABLE_KNOX_PROXY
-      updateSelectValue(selectIdx++, "no");
+      updateSelectValue(selectIdx++, "UI");
 
       //DLM_CLOUD_TYPE
       emptyTextAndPut(textIdx++, "none");
