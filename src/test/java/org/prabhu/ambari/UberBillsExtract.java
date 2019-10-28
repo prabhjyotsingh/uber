@@ -16,26 +16,15 @@
  */
 package org.prabhu.ambari;
 
-import com.google.common.base.Function;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.openqa.selenium.By;
-import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.FluentWait;
-import org.openqa.selenium.support.ui.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -127,7 +116,7 @@ public class UberBillsExtract extends AbstractIT {
             driver.switchTo().defaultContent();
 
             csvFile.append(amount).append(",");
-            takeScreenshot(urlId, date);
+            InstallationUtils.takeScreenshot(urlId, date, driver);
             nos++;
           }
         } catch (Exception e) {
@@ -144,37 +133,14 @@ public class UberBillsExtract extends AbstractIT {
     }
   }
 
-  protected WebElement pollingWait(final By locator, final long timeWait) {
-    Wait<WebDriver> wait = new FluentWait<WebDriver>(driver)
-        .withTimeout(timeWait, TimeUnit.SECONDS)
-        .pollingEvery(1, TimeUnit.SECONDS)
-        .ignoring(NoSuchElementException.class);
-
-    return wait.until(new Function<WebDriver, WebElement>() {
-      public WebElement apply(WebDriver driver) {
-        return driver.findElement(locator);
-      }
-    });
-  }
-
-  private void takeScreenshot(String urlId, String date) {
-    File screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
-    try {
-      FileUtils.copyFile(screenshot,
-          new File(WebDriverManager.downLoadsDir + date + "--" + urlId.split("/")[4] + ".png"));
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-  }
-
   List<String> getTripIdForThisPage(List<WebElement> tripElements, List<String> monthArray) {
     List<String> tripIds = new ArrayList<String>();
     for (WebElement webElement : tripElements) {
       if (webElement.findElement(By.xpath("div/div[2]/div[2]")).getText().contains("₹") &&
           monthArray.contains(
               webElement.findElement(By.xpath("div/div[2]/div[1]")).getText().split(" ")[1])
-          ) {
-        if (!xpathExists(webElement, "div[2]/div[2]/div[3]/a")) {
+      ) {
+        if (!InstallationUtils.xpathExists(webElement, "div[2]/div[2]/div[3]/a", driver)) {
           webElement.findElement(By.xpath("div[1]/div[1]")).click();
         }
         tripIds
@@ -194,13 +160,6 @@ public class UberBillsExtract extends AbstractIT {
     }
 
     return tripIds;
-  }
-
-  private Boolean xpathExists(WebElement webElement, String xpath) {
-    driver.manage().timeouts().implicitlyWait(0, TimeUnit.MILLISECONDS);
-    boolean exists = webElement.findElements(By.xpath(xpath)).size() != 0;
-    driver.manage().timeouts().implicitlyWait(3, TimeUnit.SECONDS);
-    return exists;
   }
 
 }

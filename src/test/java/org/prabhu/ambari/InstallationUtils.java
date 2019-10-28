@@ -18,12 +18,26 @@
 package org.prabhu.ambari;
 
 
+import com.google.common.base.Function;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.ExecuteWatchdog;
+import org.apache.commons.io.FileUtils;
+import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.FluentWait;
+import org.openqa.selenium.support.ui.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,5 +81,35 @@ public class InstallationUtils {
     } catch (IOException e) {
       e.printStackTrace();
     }
+  }
+
+  public static WebElement pollingWait(final By locator, final long timeWait, WebDriver driver) {
+    Wait<WebDriver> wait = new FluentWait<WebDriver>(driver)
+        .withTimeout(timeWait, TimeUnit.SECONDS)
+        .pollingEvery(1, TimeUnit.SECONDS)
+        .ignoring(NoSuchElementException.class);
+
+    return wait.until(new Function<WebDriver, WebElement>() {
+      public WebElement apply(WebDriver driver) {
+        return driver.findElement(locator);
+      }
+    });
+  }
+
+  public static void takeScreenshot(String urlId, String date, WebDriver driver) {
+    File screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+    try {
+      FileUtils.copyFile(screenshot,
+          new File(WebDriverManager.downLoadsDir + date + "--" + urlId.split("/")[4] + ".png"));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  public static Boolean xpathExists(WebElement webElement, String xpath, WebDriver driver) {
+    driver.manage().timeouts().implicitlyWait(0, TimeUnit.MILLISECONDS);
+    boolean exists = webElement.findElements(By.xpath(xpath)).size() != 0;
+    driver.manage().timeouts().implicitlyWait(3, TimeUnit.SECONDS);
+    return exists;
   }
 }
